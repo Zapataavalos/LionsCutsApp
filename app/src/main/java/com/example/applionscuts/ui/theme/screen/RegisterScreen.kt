@@ -59,14 +59,38 @@ fun RegisterScreen(
             Spacer(modifier = Modifier.height(16.dp))
             Text("Registro", style = MaterialTheme.typography.headlineMedium)
             Spacer(modifier = Modifier.height(16.dp))
-            OutlinedTextField(value = name, onValueChange = { name = it }, label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = name,
+                onValueChange = { newValue ->
+                    if (newValue.all { it.isLetter() || it.isWhitespace() }) {
+                        name = newValue
+                    }
+                },
+                label = { Text("Nombre") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(8.dp))
-            OutlinedTextField(value = email, onValueChange = { email = it }, label = { Text("Email") }, modifier = Modifier.fillMaxWidth())
+            OutlinedTextField(
+                value = email,
+                onValueChange = { email = it },
+                label = { Text("Email") },
+                modifier = Modifier.fillMaxWidth()
+            )
             Spacer(modifier = Modifier.height(8.dp))
             OutlinedTextField(
                 value = phone,
-                onValueChange = { phone = it },
-                label = { Text("Teléfono") },
+                onValueChange = { newValue ->
+                    val digitsOnly = newValue.filter { it.isDigit() }
+                    if (digitsOnly.length <= 9) {
+                        phone = when (digitsOnly.length) {
+                            in 1..4 -> digitsOnly
+                            in 5..8 -> "${digitsOnly.take(4)} ${digitsOnly.drop(4)}"
+                            9 -> "${digitsOnly.take(1)} ${digitsOnly.substring(1, 5)} ${digitsOnly.substring(5)}"
+                            else -> digitsOnly
+                        }
+                    }
+                },
+                label = { Text("Teléfono (ej: 9 1234 5678)") },
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
                 modifier = Modifier.fillMaxWidth()
             )
