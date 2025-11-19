@@ -31,10 +31,10 @@ class MainActivity : ComponentActivity() {
                 val database = AppDatabase.getDatabase(context)
 
                 val authViewModel: AuthViewModel = viewModel(
-                    factory = AuthViewModelFactory(database)
+                    factory = AuthViewModelFactory(database.userDao())
                 )
                 val productViewModel: ProductViewModel = viewModel(
-                    factory = ProductViewModelFactory(database)
+                    factory = ProductViewModelFactory(database.productDao())
                 )
 
                 val haircutViewModel: HaircutViewModel = viewModel()

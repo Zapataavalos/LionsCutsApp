@@ -1,12 +1,10 @@
 package com.example.applionscuts.data.repository
 
-import com.example.applionscuts.data.local.database.AppDatabase
 import com.example.applionscuts.data.local.user.User
 import com.example.applionscuts.data.local.user.UserDao
 
 class UserRepository(
-    private val userDao: UserDao,
-    private val database: AppDatabase
+    private val userDao: UserDao
 ) {
     suspend fun login(email: String, password: String): Result<User> {
         return try {
@@ -23,7 +21,6 @@ class UserRepository(
             val existing = userDao.getUserByEmail(email)
             if (existing != null)
                 return Result.failure(Exception("El usuario ya existe"))
-
             userDao.insertUser(User(name = name, email = email, phone = phone, password = password))
             Result.success(Unit)
         } catch (e: Exception) {

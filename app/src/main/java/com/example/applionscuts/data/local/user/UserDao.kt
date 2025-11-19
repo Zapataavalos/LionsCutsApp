@@ -1,3 +1,4 @@
+// Archivo: com/example/applionscuts/data/local/user/UserDao.kt
 package com.example.applionscuts.data.local.user
 
 import androidx.room.Dao
