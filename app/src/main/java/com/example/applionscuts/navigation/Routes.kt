@@ -8,4 +8,6 @@ object Routes {
     const val Haircuts = "haircuts"
     const val Profile = "profile"
     const val Booking = "booking"
+
+    const val Admin = "admin"
 }

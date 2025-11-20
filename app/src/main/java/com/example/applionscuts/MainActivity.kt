@@ -1,3 +1,4 @@
+// Archivo: com/example/applionscuts/MainActivity.kt
 package com.example.applionscuts
 
 import android.os.Bundle
@@ -12,11 +13,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.compose.rememberNavController
-import com.example.applionscuts.data.local.database.AppDatabase
 import com.example.applionscuts.navigation.AppNavigation
 import com.example.applionscuts.ui.screen.CartDialog
 import com.example.applionscuts.ui.screen.PaymentDialog
 import com.example.applionscuts.ui.theme.AppLionsCutsTheme
+import com.example.applionscuts.data.local.database.AppDatabase
 import com.example.applionscuts.ui.theme.viewmodel.AuthViewModelFactory
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModelFactory

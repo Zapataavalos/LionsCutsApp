@@ -1,6 +1,7 @@
 package com.example.applionscuts.navigation
 
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
@@ -21,10 +22,15 @@ fun AppNavigation(
     bookingViewModel: BookingViewModel
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
+    val isAdmin by authViewModel.isAdmin.observeAsState(false)
 
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) Routes.Home else Routes.Login
+        startDestination = if (isLoggedIn) {
+            if (isAdmin == true) Routes.Admin else Routes.Home
+        } else {
+            Routes.Login
+        }
     ) {
         composable(Routes.Login) {
             LoginScreen(
@@ -63,8 +69,7 @@ fun AppNavigation(
                         popUpTo(Routes.Home) { inclusive = true }
                     }
                 },
-                productViewModel = productViewModel,
-                authViewModel = authViewModel
+                productViewModel = productViewModel
             )
         }
 
@@ -84,8 +89,8 @@ fun AppNavigation(
         }
 
         composable(Routes.Profile) {
-            val currentUserEmail by authViewModel.currentUserName.observeAsState("")
-            profileViewModel.setUserEmail(currentUserEmail)
+            val currentUserName by authViewModel.currentUserName.observeAsState("")
+            profileViewModel.setUserEmail(currentUserName)
             ProfileScreen(
                 viewModel = profileViewModel,
                 onBack = { navController.popBackStack() },
@@ -98,6 +103,22 @@ fun AppNavigation(
                 viewModel = bookingViewModel,
                 onBack = { navController.popBackStack() }
             )
+        }
+
+        composable(Routes.Admin) {
+            AdminScreen(
+                productViewModel = productViewModel,
+                bookingViewModel = bookingViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+    }
+
+    LaunchedEffect(isAdmin) {
+        if (isAdmin == true) {
+            navController.navigate(Routes.Admin) {
+                popUpTo(Routes.Login) { inclusive = true }
+            }
         }
     }
 }

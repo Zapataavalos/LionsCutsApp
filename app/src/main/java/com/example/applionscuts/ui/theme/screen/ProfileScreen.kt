@@ -1,3 +1,4 @@
+// Archivo: com/example/applionscuts/ui/screen/ProfileScreen.kt
 package com.example.applionscuts.ui.screen
 
 import android.Manifest
@@ -14,9 +15,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.AddCard
 import androidx.compose.material.icons.filled.Camera
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.*
@@ -29,6 +28,7 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.core.content.ContextCompat
@@ -37,7 +37,6 @@ import coil.compose.AsyncImage
 import java.io.File
 import com.example.applionscuts.R
 import com.example.applionscuts.model.Appointment
-import com.example.applionscuts.model.PaymentMethod
 import com.example.applionscuts.model.UserProfile
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.ProfileViewModel
@@ -51,8 +50,8 @@ fun ProfileScreen(
 ) {
     val userProfile by viewModel.userProfile.observeAsState()
     val appointments by viewModel.appointments.observeAsState(emptyList())
-    val paymentMethods by viewModel.paymentMethods.observeAsState(emptyList())
     val showDialog by viewModel.showRedeemDialog.observeAsState(false)
+    val showChangePasswordDialog by viewModel.showChangePasswordDialog.observeAsState(false)
     val selectedImageUri by viewModel.selectedImageUri.observeAsState()
 
     val context = LocalContext.current
@@ -105,6 +104,15 @@ fun ProfileScreen(
         )
     }
 
+    if (showChangePasswordDialog) {
+        ChangePasswordDialog(
+            onDismiss = { viewModel.onHideChangePasswordDialog() },
+            onChangePassword = { currentPass, newPass, confirmPass ->
+                viewModel.changePassword(currentPass, newPass, confirmPass)
+            }
+        )
+    }
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -151,7 +159,15 @@ fun ProfileScreen(
                 Spacer(Modifier.height(24.dp))
             }
             item {
-                PaymentsSection(paymentMethods = paymentMethods)
+                Button(
+                    onClick = { viewModel.onShowChangePasswordDialog() },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    contentPadding = PaddingValues(16.dp)
+                ) {
+                    Text("Cambiar Contraseña", textAlign = TextAlign.Center)
+                }
             }
         }
     }
@@ -233,6 +249,72 @@ fun ProfileHeader(
     }
 }
 
+@Composable
+fun ChangePasswordDialog(
+    onDismiss: () -> Unit,
+    onChangePassword: (String, String, String) -> Unit
+) {
+    var currentPassword by remember { mutableStateOf("") }
+    var newPassword by remember { mutableStateOf("") }
+    var confirmNewPassword by remember { mutableStateOf("") }
+    var errorMessage by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("Cambiar Contraseña") },
+        text = {
+            Column {
+                OutlinedTextField(
+                    value = currentPassword,
+                    onValueChange = { currentPassword = it },
+                    label = { Text("Contraseña Actual") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = newPassword,
+                    onValueChange = { newPassword = it },
+                    label = { Text("Nueva Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                OutlinedTextField(
+                    value = confirmNewPassword,
+                    onValueChange = { confirmNewPassword = it },
+                    label = { Text("Confirmar Nueva Contraseña") },
+                    visualTransformation = PasswordVisualTransformation(),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Spacer(Modifier.height(8.dp))
+                if (errorMessage.isNotBlank()) {
+                    Text(errorMessage, color = MaterialTheme.colorScheme.error)
+                }
+            }
+        },
+        confirmButton = {
+            Button(onClick = {
+                errorMessage = ""
+                if (currentPassword.isBlank() || newPassword.isBlank() || confirmNewPassword.isBlank()) {
+                    errorMessage = "Todos los campos son obligatorios"
+                    return@Button
+                }
+                if (newPassword != confirmNewPassword) {
+                    errorMessage = "Las nuevas contraseñas no coinciden"
+                    return@Button
+                }
+                onChangePassword(currentPassword, newPassword, confirmNewPassword)
+            }) {
+                Text("Cambiar")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cancelar") }
+        }
+    )
+}
+
 private fun getUriForFile(context: android.content.Context, file: File): Uri {
     return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
         FileProvider.getUriForFile(context, "${context.packageName}.fileprovider", file)
@@ -240,7 +322,6 @@ private fun getUriForFile(context: android.content.Context, file: File): Uri {
         Uri.fromFile(file)
     }
 }
-
 
 @Composable
 fun FidelitySection(stars: Int, onRedeemClick: () -> Unit) {
@@ -278,46 +359,6 @@ fun AppointmentItem(appointment: Appointment) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text("${appointment.service} con ${appointment.barberName}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
             Text("${appointment.date} a las ${appointment.time}", style = MaterialTheme.typography.bodyMedium)
-        }
-    }
-}
-
-@Composable
-fun PaymentsSection(paymentMethods: List<PaymentMethod>) {
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Text("Métodos de Pago", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Spacer(Modifier.height(8.dp))
-        if (paymentMethods.isEmpty()) {
-            Text("No tienes métodos de pago guardados.", style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
-        } else {
-            paymentMethods.forEach { method ->
-                PaymentItem(method)
-                Spacer(Modifier.height(8.dp))
-            }
-        }
-        Spacer(Modifier.height(16.dp))
-        Button(onClick = { /* TODO */ }, modifier = Modifier.align(Alignment.CenterHorizontally)) {
-            Icon(Icons.Default.AddCard, contentDescription = "Añadir método de pago")
-            Spacer(Modifier.width(8.dp))
-            Text("Añadir Método")
-        }
-    }
-}
-
-@Composable
-fun PaymentItem(method: PaymentMethod) {
-    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
-        Row(
-            modifier = Modifier.padding(12.dp).fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Column {
-                Text("${method.brand} **** ${method.lastFourDigits}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            }
-            IconButton(onClick = { /* TODO */ }) {
-                Icon(Icons.Default.Delete, contentDescription = "Eliminar", tint = MaterialTheme.colorScheme.error)
-            }
         }
     }
 }

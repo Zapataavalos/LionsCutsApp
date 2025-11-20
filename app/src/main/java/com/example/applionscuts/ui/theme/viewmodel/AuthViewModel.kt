@@ -5,7 +5,6 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.applionscuts.domain.validation.Validators
-import com.example.applionscuts.model.UserRole
 import com.example.applionscuts.data.repository.UserRepository
 import kotlinx.coroutines.launch
 
@@ -27,6 +26,10 @@ class AuthViewModel(
     private val _currentUserName = MutableLiveData<String>()
     val currentUserName: LiveData<String> = _currentUserName
 
+    // --- AÑADIDO: Estado para administrador ---
+    private val _isAdmin = MutableLiveData<Boolean>()
+    val isAdmin: LiveData<Boolean> = _isAdmin
+
     fun login(email: String, password: String) {
         _errorMessage.value = null
         if (email.isBlank()) {
@@ -47,9 +50,14 @@ class AuthViewModel(
                 _isLoggedIn.postValue(true)
                 val user = result.getOrNull()
                 _currentUserName.postValue(user?.name ?: "Usuario")
+
+                // --- AÑADIDO: Detectar administrador ---
+                _isAdmin.postValue(email == "Admin@admin.cl" && password == "1234A.")
+
                 _errorMessage.postValue(null)
             } else {
                 _isLoggedIn.postValue(false)
+                _isAdmin.postValue(false) // <-- Asegurarse de limpiar
                 _errorMessage.postValue(result.exceptionOrNull()?.message ?: "Error de inicio de sesión")
             }
         }
@@ -101,5 +109,6 @@ class AuthViewModel(
     fun logout() {
         _isLoggedIn.value = false
         _currentUserName.value = ""
+        _isAdmin.value = false
     }
 }

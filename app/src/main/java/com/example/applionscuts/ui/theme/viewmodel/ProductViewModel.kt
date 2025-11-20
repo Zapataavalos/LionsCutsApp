@@ -6,7 +6,7 @@ import com.example.applionscuts.data.repository.ProductRepository
 import com.example.applionscuts.model.CartItem
 import kotlinx.coroutines.launch
 
-class ProductViewModel(private val repo: ProductRepository) : ViewModel() {
+class ProductViewModel(val repo: ProductRepository) : ViewModel() {
 
     private val _products = MutableLiveData<List<Product>>()
     val products: LiveData<List<Product>> = _products
@@ -40,7 +40,7 @@ class ProductViewModel(private val repo: ProductRepository) : ViewModel() {
         }
     }
 
-    private fun addSampleProducts() {
+    fun addSampleProducts() {
         viewModelScope.launch {
             if (repo.getProducts().isEmpty()) {
                 val list = listOf(
@@ -237,5 +237,19 @@ class ProductViewModel(private val repo: ProductRepository) : ViewModel() {
 
     fun onDialogDismiss() {
         _selectedProduct.value = null
+    }
+
+    fun addProductToDatabase(product: Product) {
+        viewModelScope.launch {
+            repo.addProduct(product)
+            loadProducts()
+        }
+    }
+
+    fun deleteProductFromDatabase(product: Product) {
+        viewModelScope.launch {
+            repo.deleteProduct(product)
+            loadProducts()
+        }
     }
 }
