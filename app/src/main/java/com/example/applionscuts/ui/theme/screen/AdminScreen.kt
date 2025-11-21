@@ -56,7 +56,6 @@ fun AdminScreen(
                 .padding(padding),
             contentPadding = PaddingValues(16.dp)
         ) {
-            // --- Sección: Agregar Producto ---
             item {
                 Text("Agregar Producto", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
@@ -108,9 +107,7 @@ fun AdminScreen(
                     onClick = {
                         if (name.isNotBlank() && price.isNotBlank() && description.isNotBlank() && stock.isNotBlank()) {
                             // --- USAR EL MÉTODO EXISTENTE EN TU VIEWMODEL ---
-                            productViewModel.addSampleProducts() // <-- NO. Esta función es privada.
-
-                            // ✅ CORREGIDO: Usar el constructor de Product y agregarlo directamente
+                            productViewModel.addSampleProducts()
                             val newProduct = Product(
                                 name = name,
                                 brand = brand,
@@ -171,7 +168,7 @@ fun AdminScreen(
     }
 }
 
-
+// --- NUEVAS FUNCIONES EN ProductViewModel (DEBES AÑADIRLAS) ---
 fun ProductViewModel.addProductToDatabase(product: Product) {
     viewModelScope.launch {
         repo.addProduct(product)

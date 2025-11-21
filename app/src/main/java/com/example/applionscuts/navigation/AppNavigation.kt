@@ -69,7 +69,8 @@ fun AppNavigation(
                         popUpTo(Routes.Home) { inclusive = true }
                     }
                 },
-                productViewModel = productViewModel
+                productViewModel = productViewModel,
+                authViewModel = authViewModel
             )
         }
 
