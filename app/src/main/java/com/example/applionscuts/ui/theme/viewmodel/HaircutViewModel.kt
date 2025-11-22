@@ -3,33 +3,38 @@ package com.example.applionscuts.viewmodel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import androidx.lifecycle.liveData
 import com.example.applionscuts.R
 import com.example.applionscuts.model.Haircut
 
 class HaircutViewModel : ViewModel() {
 
-    // Este LiveData guarda el corte que el usuario quiere ver en detalle
+    // ---------- HAIRCUT SELECCIONADO PARA DETALLES ----------
     private val _selectedHaircut = MutableLiveData<Haircut?>(null)
     val selectedHaircut: LiveData<Haircut?> = _selectedHaircut
 
-    // Función llamada por la Vista cuando se presiona "Ver más"
     fun onHaircutSelected(haircut: Haircut) {
         _selectedHaircut.value = haircut
     }
 
-    // Función llamada por la Vista para cerrar el diálogo
     fun onDialogDismiss() {
         _selectedHaircut.value = null
     }
 
-    val haircuts = liveData {
-        val list = listOf(
+    // ---------- LISTA COMPLETA DE SERVICIOS (CRUD) ----------
+    private val _haircuts = MutableLiveData<List<Haircut>>(emptyList())
+    val haircuts: LiveData<List<Haircut>> = _haircuts
+
+    init {
+        loadDefaultHaircuts() // cargamos tu catálogo original
+    }
+
+    private fun loadDefaultHaircuts() {
+        _haircuts.value = listOf(
             Haircut(
                 id = "1",
                 name = "Buzz Cut",
                 description = "Corte militar clásico.",
-                longDescription = "El Buzz Cut es un corte simple y de bajo mantenimiento, realizado completamente a máquina. Ideal para un look limpio y fresco en cualquier temporada.",
+                longDescription = "El Buzz Cut es un corte simple y de bajo mantenimiento, realizado completamente a máquina.",
                 price = 12000.0,
                 imageResId = R.drawable.buzzcut
             ),
@@ -37,7 +42,7 @@ class HaircutViewModel : ViewModel() {
                 id = "2",
                 name = "Mid Fade",
                 description = "Desvanecido medio.",
-                longDescription = "El Mid Fade (desvanecido medio) ofrece un balance perfecto entre un look conservador y moderno. El degradado comienza a mitad de la cabeza.",
+                longDescription = "El Mid Fade ofrece un balance perfecto entre moderno y clásico.",
                 price = 13000.0,
                 imageResId = R.drawable.midfade
             ),
@@ -45,7 +50,7 @@ class HaircutViewModel : ViewModel() {
                 id = "3",
                 name = "Burst Fade",
                 description = "Desvanecido explosivo.",
-                longDescription = "Perfecto para estilos como el mohicano o el 'mullet' moderno. El Burst Fade se concentra alrededor de la oreja, creando un efecto semicircular.",
+                longDescription = "Perfecto para estilos como el mohicano o mullet moderno.",
                 price = 13000.0,
                 imageResId = R.drawable.burstfade
             ),
@@ -53,7 +58,7 @@ class HaircutViewModel : ViewModel() {
                 id = "4",
                 name = "Taper Fade",
                 description = "Degradado en patillas.",
-                longDescription = "Un corte sutil y elegante. A diferencia del fade, el 'taper' solo degrada las patillas y la nuca, manteniendo más longitud en los lados.",
+                longDescription = "Sutil y elegante. Ideal para un look limpio.",
                 price = 13000.0,
                 imageResId = R.drawable.taper_fade
             ),
@@ -61,7 +66,7 @@ class HaircutViewModel : ViewModel() {
                 id = "5",
                 name = "Mullet Moderno",
                 description = "Corto adelante, largo atrás.",
-                longDescription = "El clásico de los 80 reinventado. Se combina con un fade en los lados para un look atrevido y lleno de textura.",
+                longDescription = "El clásico de los 80 reinventado.",
                 price = 17000.0,
                 imageResId = R.drawable.mullet
             ),
@@ -69,7 +74,7 @@ class HaircutViewModel : ViewModel() {
                 id = "6",
                 name = "Slick Back",
                 description = "Peinado hacia atrás.",
-                longDescription = "Un look atemporal que requiere longitud en la parte superior. Se peina todo hacia atrás, usualmente con un producto de fijación media o alta.",
+                longDescription = "Un look atemporal con fijación alta.",
                 price = 13000.0,
                 imageResId = R.drawable.slick_back
             ),
@@ -77,7 +82,7 @@ class HaircutViewModel : ViewModel() {
                 id = "7",
                 name = "Quiff Texturizado",
                 description = "Flequillo con volumen.",
-                longDescription = "El Quiff consiste en un flequillo voluminoso peinado hacia arriba y atrás. La versión texturizada le da un toque más casual y moderno.",
+                longDescription = "Un estilo moderno con textura casual.",
                 price = 13000.0,
                 imageResId = R.drawable.quiff
             ),
@@ -85,11 +90,29 @@ class HaircutViewModel : ViewModel() {
                 id = "8",
                 name = "Corte Clásico",
                 description = "Con tijera y peine.",
-                longDescription = "El corte tradicional. Ideal para quienes prefieren un look más conservador, realizado principalmente con tijera para un acabado natural.",
+                longDescription = "Acabado natural para un look conservador.",
                 price = 13000.0,
                 imageResId = R.drawable.corte_clasico
             )
         )
-        emit(list)
+    }
+
+    // ---------- CRUD: AGREGAR SERVICIO ----------
+    fun addHaircut(name: String, description: String, longDesc: String, price: Double, imageResId: Int) {
+        val newHaircut = Haircut(
+            id = System.currentTimeMillis().toString(),
+            name = name,
+            description = description,
+            longDescription = longDesc,
+            price = price,
+            imageResId = imageResId
+        )
+
+        _haircuts.value = (_haircuts.value ?: emptyList()) + newHaircut
+    }
+
+    // ---------- CRUD: ELIMINAR SERVICIO ----------
+    fun deleteHaircut(id: String) {
+        _haircuts.value = _haircuts.value?.filter { it.id != id }
     }
 }

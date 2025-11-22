@@ -9,6 +9,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import com.example.applionscuts.ui.screen.*
 import com.example.applionscuts.ui.theme.screen.ProductsScreen
+import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.*
 
@@ -19,7 +20,8 @@ fun AppNavigation(
     productViewModel: ProductViewModel,
     haircutViewModel: HaircutViewModel,
     profileViewModel: ProfileViewModel,
-    bookingViewModel: BookingViewModel
+    bookingViewModel: BookingViewModel,
+    barberViewModel: BarberViewModel
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
     val isAdmin by authViewModel.isAdmin.observeAsState(false)
@@ -135,6 +137,8 @@ fun AppNavigation(
             AdminScreen(
                 productViewModel = productViewModel,
                 bookingViewModel = bookingViewModel,
+                barberViewModel = barberViewModel,
+                haircutViewModel = haircutViewModel,
                 onBack = { navController.popBackStack() }
             )
         }

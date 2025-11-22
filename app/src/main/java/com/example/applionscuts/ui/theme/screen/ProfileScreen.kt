@@ -63,9 +63,15 @@ fun ProfileScreen(
     var photoUri by remember { mutableStateOf<Uri?>(null) }
 
 
+    // 🔥 SINCRONIZAR CITAS DEL BOOKINGVIEWMODEL HACIA PROFILEVIEWMODEL
+    val bookingAppointments by bookingViewModel.appointments.observeAsState(emptyList())
+    LaunchedEffect(bookingAppointments) {
+        viewModel.setAppointments(bookingAppointments)
+    }
+    // 🔥 FIN DE LA SINCRONIZACIÓN
 
 
-    // Launcher para la cámara
+    // Launcher cámara
     val cameraLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
@@ -76,7 +82,7 @@ fun ProfileScreen(
         }
     }
 
-    // Launcher para la galería
+    // Launcher galería
     val galleryLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.GetContent()
     ) { uri ->
@@ -85,12 +91,11 @@ fun ProfileScreen(
         }
     }
 
-    // Launcher para solicitar permiso
+    // Permisos
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
-            // Permiso concedido → abrir cámara
             val photoFile = File(context.cacheDir, "profile_image.jpg")
             photoUri = getUriForFile(context, photoFile)
             val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
@@ -98,7 +103,6 @@ fun ProfileScreen(
             }
             cameraLauncher.launch(intent)
         } else {
-            // Si se niega el permiso, abrir galería
             galleryLauncher.launch("image/*")
         }
     }
@@ -131,10 +135,7 @@ fun ProfileScreen(
                 },
                 actions = {
                     IconButton(onClick = { productViewModel.onShowCart() }) {
-                        Icon(
-                            imageVector = Icons.Default.ShoppingCart,
-                            contentDescription = "Carrito"
-                        )
+                        Icon(Icons.Default.ShoppingCart, "Carrito")
                     }
                 }
             )
@@ -157,7 +158,10 @@ fun ProfileScreen(
             }
             item {
                 userProfile?.let {
-                    FidelitySection(stars = it.fidelityStars, onRedeemClick = { viewModel.onRedeemClicked() })
+                    FidelitySection(
+                        stars = it.fidelityStars,
+                        onRedeemClick = { viewModel.onRedeemClicked() }
+                    )
                 }
                 Spacer(Modifier.height(24.dp))
             }
@@ -187,7 +191,9 @@ fun ProfileScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showImageOptions = false
-                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA) == PackageManager.PERMISSION_GRANTED) {
+                    if (ContextCompat.checkSelfPermission(context, Manifest.permission.CAMERA)
+                        == PackageManager.PERMISSION_GRANTED
+                    ) {
                         val photoFile = File(context.cacheDir, "profile_image.jpg")
                         photoUri = getUriForFile(context, photoFile)
                         val intent = Intent(MediaStore.ACTION_IMAGE_CAPTURE).apply {
@@ -197,21 +203,22 @@ fun ProfileScreen(
                     } else {
                         permissionLauncher.launch(Manifest.permission.CAMERA)
                     }
-                }) {
-                    Text("Tomar Foto")
-                }
+                }) { Text("Tomar Foto") }
             },
             dismissButton = {
                 TextButton(onClick = {
                     showImageOptions = false
                     galleryLauncher.launch("image/*")
-                }) {
-                    Text("Elegir de Galería")
-                }
+                }) { Text("Elegir de Galería") }
             }
         )
     }
 }
+
+
+// -----------------------------
+// TODAS TUS FUNCIONES ORIGINALES
+// -----------------------------
 
 @Composable
 fun ProfileHeader(
@@ -335,7 +342,9 @@ fun FidelitySection(stars: Int, onRedeemClick: () -> Unit) {
     Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
         Text("Estrellas de Fidelidad: $stars", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
         Row(horizontalArrangement = Arrangement.Center, modifier = Modifier.padding(top = 8.dp)) {
-            repeat(stars) { Icon(Icons.Default.Star, contentDescription = "Estrella de fidelidad", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp)) }
+            repeat(stars) {
+                Icon(Icons.Default.Star, contentDescription = "Estrella de fidelidad", tint = MaterialTheme.colorScheme.primary, modifier = Modifier.size(24.dp))
+            }
         }
         if (stars == 10) {
             Spacer(Modifier.height(16.dp))
@@ -362,18 +371,52 @@ fun AppointmentsSection(appointments: List<AppointmentEntity>) {
 
 @Composable
 fun AppointmentItem(appointment: AppointmentEntity) {
+
+    // Convertir fecha de "2025-10-20" → "20-10-2025"
+    val formattedDate = remember(appointment.date) {
+        try {
+            val parts = appointment.date.split("-")
+            if (parts.size == 3) "${parts[2]}-${parts[1]}-${parts[0]}"
+            else appointment.date
+        } catch (e: Exception) {
+            appointment.date
+        }
+    }
+
+    // Convertir hora de "10:00" → "10:00 AM" o "15:00" → "3:00 PM"
+    val formattedTime = remember(appointment.time) {
+        try {
+            val hour = appointment.time.substringBefore(":").toInt()
+            val minute = appointment.time.substringAfter(":")
+            val amPm = if (hour >= 12) "PM" else "AM"
+            val hour12 = when {
+                hour == 0 -> 12
+                hour > 12 -> hour - 12
+                else -> hour
+            }
+            "$hour12:$minute $amPm"
+        } catch (e: Exception) {
+            appointment.time
+        }
+    }
+
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
+
             Text("${appointment.service} con ${appointment.barberName}")
-            Text("${appointment.date} a las ${appointment.time}")
+            Text(formattedDate)
+            Text(formattedTime)
         }
     }
 }
 
 
-
 @Composable
-fun RedeemRewardDialog(onDismiss: () -> Unit, onRedeemCut: () -> Unit, onRedeemProduct: () -> Unit) {
+fun RedeemRewardDialog(
+    onDismiss: () -> Unit,
+    onRedeemCut: () -> Unit,
+    onRedeemProduct: () -> Unit
+) {
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text("Canjear Recompensa", style = MaterialTheme.typography.headlineSmall, textAlign = TextAlign.Center, modifier = Modifier.fillMaxWidth()) },
@@ -381,12 +424,18 @@ fun RedeemRewardDialog(onDismiss: () -> Unit, onRedeemCut: () -> Unit, onRedeemP
             Column(horizontalAlignment = Alignment.CenterHorizontally, modifier = Modifier.fillMaxWidth()) {
                 Text("¡Has acumulado 10 estrellas! Elige tu recompensa:", textAlign = TextAlign.Center)
                 Spacer(Modifier.height(16.dp))
-                Button(onClick = onRedeemCut, modifier = Modifier.fillMaxWidth()) { Text("Canjear por un Corte Gratis") }
+                Button(onClick = onRedeemCut, modifier = Modifier.fillMaxWidth()) {
+                    Text("Canjear por un Corte Gratis")
+                }
                 Spacer(Modifier.height(8.dp))
-                Button(onClick = onRedeemProduct, modifier = Modifier.fillMaxWidth()) { Text("Canjear por un Producto Gratis") }
+                Button(onClick = onRedeemProduct, modifier = Modifier.fillMaxWidth()) {
+                    Text("Canjear por un Producto Gratis")
+                }
             }
         },
         confirmButton = { },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("Cerrar") } }
+        dismissButton = {
+            TextButton(onClick = onDismiss) { Text("Cerrar") }
+        }
     )
 }

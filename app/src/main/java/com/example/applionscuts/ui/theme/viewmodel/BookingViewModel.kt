@@ -49,36 +49,15 @@ class BookingViewModel : ViewModel() {
 
     private fun loadBookingData() {
         _barbers.value = listOf(
-            Barber("b1", "Juan Pérez", "Especialista en Fades", R.drawable.leon),
-            Barber("b2", "Pedro Gómez", "Experto en Clásicos", R.drawable.leon),
-            Barber("b3", "Luis Martínez", "Maestro de Barbas", R.drawable.leon)
+            Barber("b1", "Juan Pérez", "Especialista en Fades"),
+            Barber("b2", "Pedro Gómez", "Experto en Clásicos"),
+            Barber("b3", "Luis Martínez", "Maestro de Barbas")
         )
 
         _availableDates.value = listOf("Lunes", "Martes", "Miércoles", "Jueves", "Viernes")
 
         _availableTimes.value = (9..21).map { String.format("%02d:00", it) }
 
-        // ✅ EJEMPLO CORREGIDO
-        _appointments.value = listOf(
-            AppointmentEntity(
-                id = 1,
-                userId = 123,
-                userName = "Carlos Soto",
-                barberName = "Juan Pérez",
-                service = "Mid Fade",
-                date = "2025-10-20",
-                time = "10:00"
-            ),
-            AppointmentEntity(
-                id = 2,
-                userId = 124,
-                userName = "Marco Díaz",
-                barberName = "Pedro Gómez",
-                service = "Corte Clásico",
-                date = "2025-10-21",
-                time = "15:00"
-            )
-        )
     }
 
     fun onBarberSelected(barber: Barber) {

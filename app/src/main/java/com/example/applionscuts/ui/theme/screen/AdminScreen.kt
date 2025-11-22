@@ -3,6 +3,7 @@ package com.example.applionscuts.ui.screen
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -14,18 +15,58 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.viewModelScope
 import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.data.local.product.Product
+import com.example.applionscuts.model.Haircut
+import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.BookingViewModel
-import kotlinx.coroutines.launch
+import com.example.applionscuts.viewmodel.HaircutViewModel
 
-@OptIn(ExperimentalMaterial3Api::class)
+// -----------------------------------------------------
+// ADMIN SCREEN ROOT
+// -----------------------------------------------------
 @Composable
 fun AdminScreen(
     productViewModel: ProductViewModel,
     bookingViewModel: BookingViewModel,
+    barberViewModel: BarberViewModel,
+    haircutViewModel: HaircutViewModel,
+    onBack: () -> Unit
+) {
+    var screen by remember { mutableStateOf("main") }
+
+    when (screen) {
+        "main" -> AdminMainScreen(
+            productViewModel = productViewModel,
+            bookingViewModel = bookingViewModel,
+            onGoToBarbers = { screen = "barbers" },
+            onGoToServices = { screen = "services" },
+            onBack = onBack
+        )
+
+        "barbers" -> BarberAdminScreen(
+            barberViewModel = barberViewModel,
+            onBack = { screen = "main" }
+        )
+
+        "services" -> ServiceAdminScreen(
+            haircutViewModel = haircutViewModel,
+            onBack = { screen = "main" }
+        )
+    }
+}
+
+// -----------------------------------------------------
+// MAIN ADMIN PANEL
+// -----------------------------------------------------
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun AdminMainScreen(
+    productViewModel: ProductViewModel,
+    bookingViewModel: BookingViewModel,
+    onGoToBarbers: () -> Unit,
+    onGoToServices: () -> Unit,
     onBack: () -> Unit
 ) {
     var name by remember { mutableStateOf("") }
@@ -50,64 +91,65 @@ fun AdminScreen(
             )
         }
     ) { padding ->
+
         LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(padding),
-            contentPadding = PaddingValues(16.dp)
+            modifier = Modifier.padding(padding).padding(16.dp)
         ) {
+
+            // Gestión de barberos y servicios
+            item {
+                Button(
+                    onClick = onGoToBarbers,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Gestionar Barberos") }
+
+                Spacer(Modifier.height(16.dp))
+
+                Button(
+                    onClick = onGoToServices,
+                    modifier = Modifier.fillMaxWidth()
+                ) { Text("Gestionar Servicios") }
+
+                Spacer(Modifier.height(24.dp))
+            }
+
+            // AGREGAR PRODUCTO
             item {
                 Text("Agregar Producto", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = name,
-                    onValueChange = { name = it },
-                    label = { Text("Nombre") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+
+                OutlinedTextField(value = name, onValueChange = { name = it },
+                    label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
+
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = brand,
-                    onValueChange = { brand = it },
-                    label = { Text("Marca") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedTextField(value = brand, onValueChange = { brand = it },
+                    label = { Text("Marca") }, modifier = Modifier.fillMaxWidth())
+
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = price,
-                    onValueChange = { price = it },
+                OutlinedTextField(value = price, onValueChange = { price = it },
                     label = { Text("Precio") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth())
+
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = description,
-                    onValueChange = { description = it },
-                    label = { Text("Descripción corta") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedTextField(value = description, onValueChange = { description = it },
+                    label = { Text("Descripción corta") }, modifier = Modifier.fillMaxWidth())
+
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = longDescription,
-                    onValueChange = { longDescription = it },
-                    label = { Text("Descripción larga") },
-                    modifier = Modifier.fillMaxWidth()
-                )
+                OutlinedTextField(value = longDescription, onValueChange = { longDescription = it },
+                    label = { Text("Descripción larga") }, modifier = Modifier.fillMaxWidth())
+
                 Spacer(Modifier.height(8.dp))
-                OutlinedTextField(
-                    value = stock,
-                    onValueChange = { stock = it },
+                OutlinedTextField(value = stock, onValueChange = { stock = it },
                     label = { Text("Stock") },
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth()
-                )
+                    modifier = Modifier.fillMaxWidth())
+
                 Spacer(Modifier.height(8.dp))
+
                 Button(
                     onClick = {
-                        if (name.isNotBlank() && price.isNotBlank() && description.isNotBlank() && stock.isNotBlank()) {
-                            // --- USAR EL MÉTODO EXISTENTE EN TU VIEWMODEL ---
-                            productViewModel.addSampleProducts()
+                        if (name.isNotBlank() && price.isNotBlank()) {
                             val newProduct = Product(
                                 name = name,
                                 brand = brand,
@@ -118,7 +160,7 @@ fun AdminScreen(
                                 stock = stock.toInt()
                             )
                             productViewModel.addProductToDatabase(newProduct)
-                            // Limpiar campos
+
                             name = ""
                             brand = "Lions Basics"
                             price = ""
@@ -128,61 +170,47 @@ fun AdminScreen(
                         }
                     },
                     modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text("Agregar Producto")
-                }
+                ) { Text("Agregar Producto") }
+
                 Spacer(Modifier.height(24.dp))
             }
 
-            // --- Sección: Productos Existentes ---
+            // LISTA DE PRODUCTOS
             item {
                 Text("Productos", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
-                products.forEach { product ->
-                    ProductAdminItem(
-                        product = product,
-                        onDelete = {
-                            // --- USAR EL MÉTODO EXISTENTE ---
-                            productViewModel.deleteProductFromDatabase(product)
-                        }
-                    )
-                    Spacer(Modifier.height(8.dp))
-                }
-                Spacer(Modifier.height(24.dp))
             }
 
-            // --- Sección: Citas Agendadas ---
+            items(products) { product ->
+                ProductAdminItem(
+                    product = product,
+                    onDelete = { productViewModel.deleteProductFromDatabase(product) }
+                )
+                Spacer(Modifier.height(8.dp))
+            }
+
+            // CITAS
             item {
+                Spacer(Modifier.height(24.dp))
                 Text("Citas Agendadas", style = MaterialTheme.typography.headlineSmall)
                 Spacer(Modifier.height(8.dp))
+
                 if (appointments.isEmpty()) {
-                    Text("No hay citas agendadas.", style = MaterialTheme.typography.bodyMedium)
-                } else {
-                    appointments.forEach { appointment ->
-                        AppointmentAdminItem(appointment = appointment)
-                        Spacer(Modifier.height(8.dp))
-                    }
+                    Text("No hay citas agendadas.")
                 }
+            }
+
+            items(appointments) { appointment ->
+                AppointmentAdminItem(appointment)
+                Spacer(Modifier.height(8.dp))
             }
         }
     }
 }
 
-// --- NUEVAS FUNCIONES EN ProductViewModel (DEBES AÑADIRLAS) ---
-fun ProductViewModel.addProductToDatabase(product: Product) {
-    viewModelScope.launch {
-        repo.addProduct(product)
-        loadProducts()
-    }
-}
-
-fun ProductViewModel.deleteProductFromDatabase(product: Product) {
-    viewModelScope.launch {
-        repo.deleteProduct(product)
-        loadProducts()
-    }
-}
-
+// -----------------------------------------------------
+// COMPONENTES
+// -----------------------------------------------------
 @Composable
 fun ProductAdminItem(product: Product, onDelete: () -> Unit) {
     Card(modifier = Modifier.fillMaxWidth()) {
@@ -193,9 +221,9 @@ fun ProductAdminItem(product: Product, onDelete: () -> Unit) {
         ) {
             Column {
                 Text(product.name, style = MaterialTheme.typography.titleMedium)
-                Text("Marca: ${product.brand}", style = MaterialTheme.typography.bodySmall)
-                Text("$${product.price}", style = MaterialTheme.typography.bodyMedium)
-                Text("Stock: ${product.stock}", style = MaterialTheme.typography.bodySmall)
+                Text("Marca: ${product.brand}")
+                Text("$${product.price}")
+                Text("Stock: ${product.stock}")
             }
             IconButton(onClick = onDelete) {
                 Icon(Icons.Default.Delete, "Eliminar", tint = MaterialTheme.colorScheme.error)
@@ -208,10 +236,10 @@ fun ProductAdminItem(product: Product, onDelete: () -> Unit) {
 fun AppointmentAdminItem(appointment: AppointmentEntity) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("Barbero: ${appointment.barberName}", style = MaterialTheme.typography.bodyMedium)
-            Text("Servicio: ${appointment.service}", style = MaterialTheme.typography.bodyMedium)
-            Text("Fecha: ${appointment.date}", style = MaterialTheme.typography.bodyMedium)
-            Text("Hora: ${appointment.time}", style = MaterialTheme.typography.bodyMedium)
+            Text("Barbero: ${appointment.barberName}")
+            Text("Servicio: ${appointment.service}")
+            Text("Fecha: ${appointment.date}")
+            Text("Hora: ${appointment.time}")
         }
     }
 }

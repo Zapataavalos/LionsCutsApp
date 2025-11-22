@@ -18,9 +18,14 @@ import com.example.applionscuts.ui.screen.CartDialog
 import com.example.applionscuts.ui.screen.PaymentDialog
 import com.example.applionscuts.ui.theme.AppLionsCutsTheme
 import com.example.applionscuts.data.local.database.AppDatabase
+
 import com.example.applionscuts.ui.theme.viewmodel.AuthViewModelFactory
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModelFactory
+
+// ✔️ IMPORTANDO BarberViewModel
+import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
+
 import com.example.applionscuts.viewmodel.*
 
 class MainActivity : ComponentActivity() {
@@ -34,9 +39,13 @@ class MainActivity : ComponentActivity() {
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AuthViewModelFactory(database.userDao())
                 )
+
                 val productViewModel: ProductViewModel = viewModel(
                     factory = ProductViewModelFactory(database.productDao())
                 )
+
+                // ✔️ AHORA CREAMOS EL BARBERVIEWMODEL
+                val barberViewModel: BarberViewModel = viewModel()
 
                 val haircutViewModel: HaircutViewModel = viewModel()
                 val profileViewModel: ProfileViewModel = viewModel()
@@ -51,6 +60,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 val navController = rememberNavController()
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -61,12 +71,14 @@ class MainActivity : ComponentActivity() {
                         productViewModel = productViewModel,
                         haircutViewModel = haircutViewModel,
                         profileViewModel = profileViewModel,
-                        bookingViewModel = bookingViewModel
+                        bookingViewModel = bookingViewModel,
+                        barberViewModel = barberViewModel
                     )
                 }
 
                 val showCart by productViewModel.showCartDialog.observeAsState(false)
                 val showPayment by productViewModel.showPaymentDialog.observeAsState(false)
+
                 if (showCart) CartDialog(viewModel = productViewModel)
                 if (showPayment) PaymentDialog(viewModel = productViewModel)
             }

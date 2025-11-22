@@ -24,7 +24,7 @@ class ProfileViewModel : ViewModel() {
     private val _showChangePasswordDialog = MutableLiveData<Boolean>(false)
     val showChangePasswordDialog: LiveData<Boolean> = _showChangePasswordDialog
 
-    private var userEmail: String = "lions@email.com"
+    private var userEmail: String = "lions@gmail.com"
 
     init {
         loadUserProfile()
