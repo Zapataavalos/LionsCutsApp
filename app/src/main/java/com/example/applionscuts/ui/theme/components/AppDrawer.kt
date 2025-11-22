@@ -21,6 +21,7 @@ import com.example.applionscuts.R
 
 @Composable
 fun AppDrawer(
+    userName: String,        // ⭐ NUEVO
     isAdmin: Boolean,
     onCloseDrawer: () -> Unit,
     onNavigateToHaircuts: () -> Unit,
@@ -47,9 +48,18 @@ fun AppDrawer(
                     .size(100.dp)
                     .clip(RoundedCornerShape(16.dp))
             )
+
+            // Nombre de la App (fijo)
             Text(
                 text = "LionsCuts",
                 style = MaterialTheme.typography.headlineSmall
+            )
+
+            // Nombre dinámico del usuario
+            Text(
+                text = userName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
             )
         }
 
@@ -97,9 +107,7 @@ fun AppDrawer(
             }
         )
 
-        // -----------------------------------
-        // SECCIÓN EXCLUSIVA PARA ADMIN
-        // -----------------------------------
+        // Administrador
         if (isAdmin) {
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -116,9 +124,7 @@ fun AppDrawer(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // -----------------------------------
-        // CERRAR SESIÓN
-        // -----------------------------------
+        // Cerrar sesión
         NavigationDrawerItem(
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, "Cerrar Sesión") },
             label = { Text("Cerrar Sesión") },
@@ -131,3 +137,4 @@ fun AppDrawer(
         )
     }
 }
+

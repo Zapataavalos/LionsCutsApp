@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -41,14 +42,20 @@ fun HomeScreen(
 
     val userName by authViewModel.currentUserName.observeAsState("Usuario")
     val isAdmin by authViewModel.isAdmin.observeAsState(false)
+    val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
 
-    var showWelcomeToast by remember { mutableStateOf(true) }
+    // -----------------------------
+    // CONTROL DEL MENSAJE BIENVENIDA
+    // -----------------------------
+    var hasWelcomed by rememberSaveable { mutableStateOf(false) }
 
-    // Mensaje de bienvenida SOLO la primera vez
-    LaunchedEffect(showWelcomeToast) {
-        if (showWelcomeToast) {
+    LaunchedEffect(isLoggedIn) {
+        if (isLoggedIn && !hasWelcomed) {
             Toast.makeText(context, "¡Bienvenido, $userName!", Toast.LENGTH_SHORT).show()
-            showWelcomeToast = false
+            hasWelcomed = true
+        }
+        if (!isLoggedIn) {
+            hasWelcomed = false
         }
     }
 
@@ -56,6 +63,7 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             AppDrawer(
+                userName = userName,      // ⭐ PASAR EL NOMBRE ACTUAL
                 isAdmin = isAdmin,
                 onCloseDrawer = { scope.launch { drawerState.close() } },
                 onNavigateToHaircuts = onNavigateToHaircuts,
@@ -64,9 +72,9 @@ fun HomeScreen(
                 onNavigateToAdmin = onNavigateToAdmin,
                 onLogout = onLogout
             )
+
         }
     ) {
-
         Scaffold(
             topBar = {
                 AppTopBar(
@@ -76,14 +84,11 @@ fun HomeScreen(
                 )
             }
         ) { padding ->
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(padding)
             ) {
-
-                // Imagen de fondo
                 Image(
                     painter = painterResource(id = R.drawable.leons),
                     contentDescription = "Fondo de barbería",
@@ -91,14 +96,12 @@ fun HomeScreen(
                     contentScale = ContentScale.Crop
                 )
 
-                // Capa oscura
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.5f))
                 )
 
-                // Contenido principal
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -139,3 +142,4 @@ fun HomeScreen(
         }
     }
 }
+

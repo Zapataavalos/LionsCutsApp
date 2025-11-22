@@ -90,22 +90,19 @@ fun AppNavigation(
             )
         }
 
-        // -------------------------------------------------------------
-// PROFILE
-// -------------------------------------------------------------
+        // PROFILE
         composable(Routes.Profile) {
 
-            val userIdStr = currentUser?.id?.toString() ?: ""
-            val userName = currentUser?.name ?: ""
+            val user = currentUser
 
-            // 🔥 ACTUALIZAR PROFILEVIEWMODEL CON DATOS DE AUTHVIEWMODEL
-            LaunchedEffect(currentUser) {
-                currentUser?.let { u ->
+            // Sincronizar datos
+            LaunchedEffect(user) {
+                if (user != null) {
                     profileViewModel.updateUserFromAuth(
-                        id = u.id.toString(),
-                        name = u.name,
-                        email = u.email,
-                        phone = u.phone
+                        id = user.id.toString(),
+                        name = user.name,
+                        email = user.email,
+                        phone = user.phone
                     )
                 }
             }
@@ -114,8 +111,8 @@ fun AppNavigation(
                 viewModel = profileViewModel,
                 productViewModel = productViewModel,
                 bookingViewModel = bookingViewModel,
-                currentUserId = userIdStr,
-                currentUserName = userName,
+                currentUserId = user?.id?.toString() ?: "",
+                currentUserName = user?.name ?: "",
                 onBack = { navController.popBackStack() },
                 onNavigateToEditProfile = {
                     navController.navigate(Routes.ProfileEdit)
@@ -123,26 +120,23 @@ fun AppNavigation(
             )
         }
 
-
         // PROFILE EDIT
         composable(Routes.ProfileEdit) {
-
             ProfileEditScreen(
                 viewModel = profileViewModel,
+                authViewModel = authViewModel,  // ⭐ Se pasa correctamente
                 onBack = { navController.popBackStack() }
             )
         }
 
         // BOOKING
         composable(Routes.Booking) {
-
-            val userIdStr = currentUser?.id?.toString() ?: ""
-            val userName = currentUser?.name ?: ""
+            val user = currentUser
 
             BookingScreen(
                 viewModel = bookingViewModel,
-                currentUserId = userIdStr,
-                currentUserName = userName,
+                currentUserId = user?.id?.toString() ?: "",
+                currentUserName = user?.name ?: "",
                 onBack = { navController.popBackStack() }
             )
         }

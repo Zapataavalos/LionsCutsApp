@@ -107,7 +107,8 @@ fun ProfileScreen(
         topBar = {
             AppTopBar(
                 title = "Mi Perfil",
-                onMenuClick = onBack,
+                showBackButton = true,
+                onBackClick = onBack,
                 onCartClick = { productViewModel.onShowCart() },
                 extraActions = {
                     IconButton(onClick = onNavigateToEditProfile) {
@@ -116,6 +117,7 @@ fun ProfileScreen(
                 }
             )
         }
+
     ) { padding ->
 
         LazyColumn(

@@ -6,6 +6,7 @@ import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.model.UserProfile
+
 class ProfileViewModel : ViewModel() {
 
     private val _userProfile = MutableLiveData<UserProfile>()
@@ -24,6 +25,15 @@ class ProfileViewModel : ViewModel() {
     val showRedeemDialog: LiveData<Boolean> = _showRedeemDialog
 
 
+    fun updateUserName(newName: String) {
+        _userProfile.value = _userProfile.value?.copy(name = newName)
+    }
+
+    fun updateUserPhone(newPhone: String) {
+        _userProfile.value = _userProfile.value?.copy(phone = newPhone)
+    }
+
+
     // -----------------------------------------------------
     // Recibir datos del AuthViewModel
     // -----------------------------------------------------
@@ -33,24 +43,22 @@ class ProfileViewModel : ViewModel() {
             name = name,
             email = email,
             phone = phone,
-            fidelityStars = 10
+            fidelityStars = 10  // lleno
         )
     }
 
     // -----------------------------------------------------
-    // Actualizar nombre
-    // -----------------------------------------------------
-    fun updateUserName(newName: String) {
+    fun updateUserName(newName: String, authViewModel: AuthViewModel) {
         _userProfile.value = _userProfile.value?.copy(name = newName)
+        authViewModel.updateCurrentUser(name = newName)
     }
 
-    // -----------------------------------------------------
-    // Actualizar telefono
-    // -----------------------------------------------------
-    fun updateUserPhone(newPhone: String) {
+    fun updateUserPhone(newPhone: String, authViewModel: AuthViewModel) {
         _userProfile.value = _userProfile.value?.copy(phone = newPhone)
+        authViewModel.updateCurrentUser(phone = newPhone)
     }
 
+    // -----------------------------------------------------
     fun setAppointments(list: List<AppointmentEntity>) {
         _appointments.value = list
     }
@@ -59,8 +67,6 @@ class ProfileViewModel : ViewModel() {
         _selectedImageUri.value = uri
     }
 
-    // -----------------------------------------------------
-    // Fidelidad
     // -----------------------------------------------------
     fun onRedeemClicked() {
         if (_userProfile.value?.fidelityStars == 10) {
@@ -78,8 +84,6 @@ class ProfileViewModel : ViewModel() {
     }
 
     // -----------------------------------------------------
-    // Contraseña
-    // -----------------------------------------------------
     fun onShowChangePasswordDialog() {
         _showChangePasswordDialog.value = true
     }
@@ -89,8 +93,9 @@ class ProfileViewModel : ViewModel() {
     }
 
     fun changePassword(currentPass: String, newPass: String, confirmPass: String) {
-        println("Contraseña actualizada para ${_userProfile.value?.email}")
+        println("Password updated for ${_userProfile.value?.email}")
         _showChangePasswordDialog.value = false
     }
-}
 
+
+}

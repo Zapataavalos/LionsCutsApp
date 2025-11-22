@@ -8,22 +8,25 @@ import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
+import com.example.applionscuts.viewmodel.AuthViewModel
 import com.example.applionscuts.viewmodel.ProfileViewModel
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ProfileEditScreen(
     viewModel: ProfileViewModel,
+    authViewModel: AuthViewModel,   // ← NECESARIO para actualizar el nombre global
     onBack: () -> Unit
 ) {
-    val user = viewModel.userProfile.value
+    val user = viewModel.userProfile.observeAsState().value
 
-    // ===================== CAMPOS =====================
     var name by remember { mutableStateOf(user?.name ?: "") }
     var phone by remember { mutableStateOf("+56 9 ") }
 
@@ -31,19 +34,17 @@ fun ProfileEditScreen(
     var newPass by remember { mutableStateOf("") }
     var confirmPass by remember { mutableStateOf("") }
 
-    var errorMessage by remember { mutableStateOf("") }
-    var successMessage by remember { mutableStateOf("") }
-
     var passwordVisible by remember { mutableStateOf(false) }
     var confirmPasswordVisible by remember { mutableStateOf(false) }
 
-    // ===================== CARGAR TELÉFONO =====================
+    val snackbarHostState = remember { SnackbarHostState() }
+    val scope = rememberCoroutineScope()
+
+    // Cargar teléfono del usuario
     LaunchedEffect(user) {
         user?.phone?.let { saved ->
-            if (saved.isNotBlank()) {
-                val formatted = saved.chunked(1).joinToString(" ")
-                phone = "+56 $formatted"
-            }
+            val formatted = saved.chunked(1).joinToString(" ")
+            phone = "+56 $formatted"
         }
     }
 
@@ -57,7 +58,8 @@ fun ProfileEditScreen(
                     }
                 }
             )
-        }
+        },
+        snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
 
         Column(
@@ -68,32 +70,29 @@ fun ProfileEditScreen(
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
 
-            // =======================================================
-            // DATOS PERSONALES
-            // =======================================================
             Text("Datos Personales", style = MaterialTheme.typography.titleMedium)
 
-            // -------- NOMBRE SOLO LETRAS --------
+            // ----------------- CAMBIO DE NOMBRE -----------------
             OutlinedTextField(
                 value = name,
                 onValueChange = {
-                    if (it.all { c -> c.isLetter() || c.isWhitespace() }) {
+                    if (it.all { c -> c.isLetter() || c.isWhitespace() })
                         name = it
-                    }
                 },
                 modifier = Modifier.fillMaxWidth(),
                 label = { Text("Nombre") }
             )
 
-            // -------- GUARDAR NOMBRE --------
             Button(
                 onClick = {
-                    if (name.isBlank()) {
-                        errorMessage = "El nombre no puede estar vacío"
-                    } else {
-                        viewModel.updateUserName(name)
-                        successMessage = "Nombre actualizado correctamente"
-                        errorMessage = ""
+                    scope.launch {
+                        if (name.isBlank()) {
+                            snackbarHostState.showSnackbar("El nombre no puede estar vacío")
+                        } else {
+                            viewModel.updateUserName(name)
+                            authViewModel.updateCurrentUserName(name)
+                            snackbarHostState.showSnackbar("Nombre actualizado")
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -101,10 +100,8 @@ fun ProfileEditScreen(
                 Text("Guardar Nombre")
             }
 
-            // =======================================================
-            // TELÉFONO
-            // =======================================================
 
+            // ----------------- CAMBIO DE TELÉFONO -----------------
             OutlinedTextField(
                 value = phone,
                 onValueChange = { newValue ->
@@ -120,20 +117,20 @@ fun ProfileEditScreen(
                 modifier = Modifier.fillMaxWidth()
             )
 
-            // -------- GUARDAR TELÉFONO --------
             Button(
                 onClick = {
-                    val cleanedPhone = phone
-                        .replace("+56", "")
-                        .replace(" ", "")
-                        .filter { it.isDigit() }
+                    scope.launch {
+                        val cleanedPhone = phone
+                            .replace("+56", "")
+                            .replace(" ", "")
+                            .filter { it.isDigit() }
 
-                    if (cleanedPhone.length != 9) {
-                        errorMessage = "Formato de teléfono inválido"
-                    } else {
-                        viewModel.updateUserPhone(cleanedPhone)
-                        successMessage = "Teléfono actualizado correctamente"
-                        errorMessage = ""
+                        if (cleanedPhone.length != 9) {
+                            snackbarHostState.showSnackbar("Formato de teléfono inválido")
+                        } else {
+                            viewModel.updateUserPhone(cleanedPhone)
+                            snackbarHostState.showSnackbar("Teléfono actualizado")
+                        }
                     }
                 },
                 modifier = Modifier.fillMaxWidth()
@@ -141,13 +138,10 @@ fun ProfileEditScreen(
                 Text("Guardar Teléfono")
             }
 
-            // =======================================================
-            // CAMBIO DE CONTRASEÑA
-            // =======================================================
-
             Divider()
             Text("Cambiar Contraseña", style = MaterialTheme.typography.titleMedium)
 
+            // ---------------- CONTRASEÑA ACTUAL ----------------
             OutlinedTextField(
                 value = currentPass,
                 onValueChange = { currentPass = it },
@@ -156,6 +150,7 @@ fun ProfileEditScreen(
                 visualTransformation = PasswordVisualTransformation()
             )
 
+            // ---------------- NUEVA CONTRASEÑA ----------------
             OutlinedTextField(
                 value = newPass,
                 onValueChange = { newPass = it },
@@ -190,37 +185,26 @@ fun ProfileEditScreen(
 
             Button(
                 onClick = {
-                    errorMessage = ""
-                    successMessage = ""
+                    scope.launch {
+                        when {
+                            currentPass.isBlank() || newPass.isBlank() || confirmPass.isBlank() ->
+                                snackbarHostState.showSnackbar("Todos los campos son obligatorios")
 
-                    if (currentPass.isBlank() || newPass.isBlank() || confirmPass.isBlank()) {
-                        errorMessage = "Todos los campos son obligatorios"
-                        return@Button
+                            newPass != confirmPass ->
+                                snackbarHostState.showSnackbar("Las contraseñas no coinciden")
+
+                            else -> {
+                                viewModel.changePassword(currentPass, newPass, confirmPass)
+                                snackbarHostState.showSnackbar("Contraseña actualizada")
+                            }
+                        }
                     }
-
-                    if (newPass != confirmPass) {
-                        errorMessage = "Las contraseñas no coinciden"
-                        return@Button
-                    }
-
-                    viewModel.changePassword(currentPass, newPass, confirmPass)
-                    successMessage = "Contraseña actualizada correctamente"
                 },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Actualizar Contraseña")
             }
-
-            // =======================================================
-            // MENSAJES DE ERROR / ÉXITO
-            // =======================================================
-
-            if (errorMessage.isNotEmpty()) {
-                Text(errorMessage, color = MaterialTheme.colorScheme.error)
-            }
-            if (successMessage.isNotEmpty()) {
-                Text(successMessage, color = MaterialTheme.colorScheme.primary)
-            }
         }
     }
 }
+

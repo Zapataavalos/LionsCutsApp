@@ -30,22 +30,20 @@ class AuthViewModel(
     private val _currentUser = MutableLiveData<User?>()
     val currentUser: LiveData<User?> = _currentUser
 
-    // --- Estado admin ---
     private val _isAdmin = MutableLiveData<Boolean>()
     val isAdmin: LiveData<Boolean> = _isAdmin
 
 
-
     // ------------------------------------------------------------
-    //                       LOGIN
+    // LOGIN
     // ------------------------------------------------------------
     fun login(email: String, password: String) {
         _errorMessage.value = null
 
-        // --- LOGIN DE ADMIN (SIN BD) ---
+        // --- LOGIN ADMIN SIN BASE DE DATOS ---
         if (email == "Admin@admin.cl" && password == "1234A.") {
 
-            _currentUser.value = User(
+            val adminUser = User(
                 id = 0,
                 name = "Administrador",
                 email = email,
@@ -55,13 +53,14 @@ class AuthViewModel(
                 barberSpecificData = null
             )
 
-            _currentUserName.value = "Administrador"
+            _currentUser.value = adminUser
+            _currentUserName.value = adminUser.name
             _isLoggedIn.value = true
             _isAdmin.value = true
             return
         }
 
-        // --- VALIDACIONES ---
+        // Validaciones
         if (email.isBlank()) {
             _errorMessage.value = "El campo email no puede estar vacío"
             return
@@ -75,7 +74,7 @@ class AuthViewModel(
             return
         }
 
-        // --- LOGIN NORMAL CONTRA LA BD ---
+        // LOGIN NORMAL
         viewModelScope.launch {
             val result = userRepository.login(email, password)
 
@@ -87,6 +86,7 @@ class AuthViewModel(
                 _isLoggedIn.postValue(true)
                 _isAdmin.postValue(user?.role == "admin")
                 _errorMessage.postValue(null)
+
             } else {
                 _isLoggedIn.postValue(false)
                 _isAdmin.postValue(false)
@@ -96,20 +96,12 @@ class AuthViewModel(
     }
 
 
-
     // ------------------------------------------------------------
-    //                     REGISTRO
+    // REGISTRO
     // ------------------------------------------------------------
-    fun register(
-        name: String,
-        email: String,
-        phone: String,
-        password: String,
-        confirmPassword: String
-    ) {
+    fun register(name: String, email: String, phone: String, password: String, confirmPassword: String) {
         _errorMessage.value = null
 
-        // VALIDACIONES
         when {
             !validators.isValidName(name) ->
                 _errorMessage.value = "El nombre solo puede contener letras y espacios"
@@ -118,7 +110,7 @@ class AuthViewModel(
                 _errorMessage.value = "El formato del email no es válido"
 
             !validators.isValidChileanPhone(phone) ->
-                _errorMessage.value = "El teléfono debe tener 9 dígitos y comenzar con 9 (ej: 912345678)"
+                _errorMessage.value = "El teléfono debe tener 9 dígitos y comenzar con 9 (912345678)"
 
             !validators.isValidPassword(password) ->
                 _errorMessage.value = validators.getPasswordErrorMessage(password)
@@ -127,12 +119,10 @@ class AuthViewModel(
                 _errorMessage.value = "Las contraseñas no coinciden"
 
             else -> {
-                // REGISTRO BD
                 viewModelScope.launch {
                     val result = userRepository.register(name, email, phone, password)
 
                     if (result.isSuccess) {
-                        _registrationSuccess.postValue(true)
 
                         val newUser = User(
                             id = 0,
@@ -145,7 +135,8 @@ class AuthViewModel(
 
                         _currentUser.postValue(newUser)
                         _currentUserName.postValue(name)
-                        _errorMessage.postValue(null)
+                        _registrationSuccess.postValue(true)
+
                     } else {
                         _registrationSuccess.postValue(false)
                         _errorMessage.postValue(
@@ -158,9 +149,33 @@ class AuthViewModel(
     }
 
 
+    // ------------------------------------------------------------
+    // 🔥 ACTUALIZAR SOLO EL NOMBRE GLOBAL
+    // ------------------------------------------------------------
+    fun updateCurrentUserName(newName: String) {
+        _currentUserName.value = newName
+        _currentUser.value = _currentUser.value?.copy(name = newName)
+    }
+
 
     // ------------------------------------------------------------
-    //                       LOGOUT
+    // 🔥 ACTUALIZAR NOMBRE Y TELÉFONO (SINCRONIZACIÓN GLOBAL)
+    // ------------------------------------------------------------
+    fun updateCurrentUser(name: String? = null, phone: String? = null) {
+        val current = _currentUser.value ?: return
+
+        val updatedUser = current.copy(
+            name = name ?: current.name,
+            phone = phone ?: current.phone
+        )
+
+        _currentUser.value = updatedUser
+        _currentUserName.value = updatedUser.name
+    }
+
+
+    // ------------------------------------------------------------
+    // LOGOUT
     // ------------------------------------------------------------
     fun logout() {
         _isLoggedIn.value = false
