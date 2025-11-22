@@ -4,7 +4,7 @@ import android.net.Uri
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
-import com.example.applionscuts.model.Appointment
+import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.model.UserProfile
 
 class ProfileViewModel : ViewModel() {
@@ -12,8 +12,8 @@ class ProfileViewModel : ViewModel() {
     private val _userProfile = MutableLiveData<UserProfile>()
     val userProfile: LiveData<UserProfile> = _userProfile
 
-    private val _appointments = MutableLiveData<List<Appointment>>()
-    val appointments: LiveData<List<Appointment>> = _appointments
+    private val _appointments = MutableLiveData<List<AppointmentEntity>>()
+    val appointments: LiveData<List<AppointmentEntity>> = _appointments
 
     private val _showRedeemDialog = MutableLiveData<Boolean>(false)
     val showRedeemDialog: LiveData<Boolean> = _showRedeemDialog
@@ -37,11 +37,14 @@ class ProfileViewModel : ViewModel() {
 
     private fun loadUserProfile() {
         _userProfile.value = UserProfile("uid-123", "LionsCuts", userEmail, 10)
-        _appointments.value = listOf(
-            Appointment("c1", "Barbero Juan", "Mid Fade", "20/10/2025", "10:00 AM"),
-            Appointment("c2", "Barbero Pedro", "Corte Clásico", "15/09/2025", "03:00 PM"),
-            Appointment("c3", "Barbero Luis", "Buzz Cut", "01/09/2025", "12:00 PM")
-        )
+
+        // YA NO cargamos citas fijas aquí
+        _appointments.value = emptyList()
+    }
+
+    // NUEVO —— permite a ProfileScreen actualizar las citas reales del usuario
+    fun setAppointments(list: List<AppointmentEntity>) {
+        _appointments.value = list
     }
 
     fun onRedeemClicked() {

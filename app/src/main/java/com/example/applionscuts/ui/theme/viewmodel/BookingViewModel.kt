@@ -1,16 +1,23 @@
-// Archivo: com/example/applionscuts/viewmodel/BookingViewModel.kt
 package com.example.applionscuts.viewmodel
 
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import com.example.applionscuts.R
-import com.example.applionscuts.model.Appointment
+import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.model.Barber
 
 class BookingViewModel : ViewModel() {
 
-    // Listas de Datos
+    // ---- Datos del usuario actual ----
+    private var userId: String = ""
+    private var userName: String = ""
+
+    fun setUserData(id: String, name: String) {
+        userId = id
+        userName = name
+    }
+
     private val _barbers = MutableLiveData<List<Barber>>()
     val barbers: LiveData<List<Barber>> = _barbers
 
@@ -20,7 +27,6 @@ class BookingViewModel : ViewModel() {
     private val _availableTimes = MutableLiveData<List<String>>()
     val availableTimes: LiveData<List<String>> = _availableTimes
 
-    // Estado de Selección del Usuario
     private val _selectedBarber = MutableLiveData<Barber?>(null)
     val selectedBarber: LiveData<Barber?> = _selectedBarber
 
@@ -30,11 +36,10 @@ class BookingViewModel : ViewModel() {
     private val _selectedTime = MutableLiveData<String?>(null)
     val selectedTime: LiveData<String?> = _selectedTime
 
-    // --- AÑADIDO: Lista de citas agendadas ---
-    private val _appointments = MutableLiveData<List<Appointment>>()
-    val appointments: LiveData<List<Appointment>> = _appointments
+    // ---- Citas ----
+    private val _appointments = MutableLiveData<List<AppointmentEntity>>()
+    val appointments: LiveData<List<AppointmentEntity>> = _appointments
 
-    // Estado de la Reserva
     private val _bookingSuccess = MutableLiveData<Boolean>(false)
     val bookingSuccess: LiveData<Boolean> = _bookingSuccess
 
@@ -43,7 +48,6 @@ class BookingViewModel : ViewModel() {
     }
 
     private fun loadBookingData() {
-        // Datos Simulados
         _barbers.value = listOf(
             Barber("b1", "Juan Pérez", "Especialista en Fades", R.drawable.leon),
             Barber("b2", "Pedro Gómez", "Experto en Clásicos", R.drawable.leon),
@@ -54,11 +58,26 @@ class BookingViewModel : ViewModel() {
 
         _availableTimes.value = (9..21).map { String.format("%02d:00", it) }
 
-        // --- AÑADIDO: Citas simuladas para el administrador ---
+        // ✅ EJEMPLO CORREGIDO
         _appointments.value = listOf(
-            Appointment("1", "Juan Pérez", "Mid Fade", "2025-10-20", "10:00"),
-            Appointment("2", "Pedro Gómez", "Corte Clásico", "2025-10-21", "15:00"),
-            Appointment("3", "Luis Martínez", "Buzz Cut", "2025-10-22", "12:00")
+            AppointmentEntity(
+                id = 1,
+                userId = 123,
+                userName = "Carlos Soto",
+                barberName = "Juan Pérez",
+                service = "Mid Fade",
+                date = "2025-10-20",
+                time = "10:00"
+            ),
+            AppointmentEntity(
+                id = 2,
+                userId = 124,
+                userName = "Marco Díaz",
+                barberName = "Pedro Gómez",
+                service = "Corte Clásico",
+                date = "2025-10-21",
+                time = "15:00"
+            )
         )
     }
 
@@ -79,22 +98,19 @@ class BookingViewModel : ViewModel() {
         val date = _selectedDate.value ?: return
         val time = _selectedTime.value ?: return
 
-        // --- AÑADIDO: Guardar la cita en la lista ---
-        val newAppointment = Appointment(
-            id = (_appointments.value?.size ?: 0).toString(),
+        val userIdInt = userId.toIntOrNull() ?: 0
+
+        val newAppointment = AppointmentEntity(
+            userId = userIdInt,
+            userName = userName,
             barberName = barber.name,
-            service = "Corte de Cabello", // Puedes mejorar esto en el futuro
+            service = "Corte de Cabello",
             date = date,
             time = time
         )
 
         val updatedList = (_appointments.value ?: emptyList()) + newAppointment
         _appointments.value = updatedList
-
-        println("CITA CONFIRMADA:")
-        println("Barbero: ${barber.name}")
-        println("Fecha: $date")
-        println("Hora: $time")
 
         _bookingSuccess.value = true
     }

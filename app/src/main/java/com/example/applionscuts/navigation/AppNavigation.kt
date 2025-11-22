@@ -23,29 +23,36 @@ fun AppNavigation(
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
     val isAdmin by authViewModel.isAdmin.observeAsState(false)
+    val currentUser by authViewModel.currentUser.observeAsState()
 
     NavHost(
         navController = navController,
-        startDestination = if (isLoggedIn) {
-            if (isAdmin == true) Routes.Admin else Routes.Home
-        } else {
-            Routes.Login
-        }
+        startDestination =
+            if (isLoggedIn) {
+                if (isAdmin == true) Routes.Admin else Routes.Home
+            } else Routes.Login
     ) {
+
+        // --- LOGIN ---
         composable(Routes.Login) {
             LoginScreen(
                 authViewModel = authViewModel,
                 onLoginSuccess = {
-                    navController.navigate(Routes.Home) {
-                        popUpTo(Routes.Login) { inclusive = true }
+                    if (authViewModel.isAdmin.value == true) {
+                        navController.navigate(Routes.Admin) {
+                            popUpTo(Routes.Login) { inclusive = true }
+                        }
+                    } else {
+                        navController.navigate(Routes.Home) {
+                            popUpTo(Routes.Login) { inclusive = true }
+                        }
                     }
                 },
-                onNavigateToRegister = {
-                    navController.navigate(Routes.Register)
-                }
+                onNavigateToRegister = { navController.navigate(Routes.Register) }
             )
         }
 
+        // --- REGISTER ---
         composable(Routes.Register) {
             RegisterScreen(
                 authViewModel = authViewModel,
@@ -57,12 +64,14 @@ fun AppNavigation(
             )
         }
 
+        // --- HOME ---
         composable(Routes.Home) {
             HomeScreen(
                 onNavigateToHaircuts = { navController.navigate(Routes.Haircuts) },
                 onNavigateToProducts = { navController.navigate(Routes.Products) },
                 onNavigateToProfile = { navController.navigate(Routes.Profile) },
                 onNavigateToBooking = { navController.navigate(Routes.Booking) },
+                onNavigateToAdmin = { navController.navigate(Routes.Admin) },
                 onLogout = {
                     authViewModel.logout()
                     navController.navigate(Routes.Login) {
@@ -74,6 +83,7 @@ fun AppNavigation(
             )
         }
 
+        // --- PRODUCTS ---
         composable(Routes.Products) {
             ProductsScreen(
                 productViewModel = productViewModel,
@@ -81,6 +91,7 @@ fun AppNavigation(
             )
         }
 
+        // --- HAIRCUTS ---
         composable(Routes.Haircuts) {
             HaircutsScreen(
                 viewModel = haircutViewModel,
@@ -89,23 +100,37 @@ fun AppNavigation(
             )
         }
 
+        // --- PROFILE ---
         composable(Routes.Profile) {
-            val currentUserName by authViewModel.currentUserName.observeAsState("")
-            profileViewModel.setUserEmail(currentUserName)
+
+            val userIdStr = currentUser?.id?.toString() ?: ""
+            val userName = currentUser?.name ?: ""
+
             ProfileScreen(
                 viewModel = profileViewModel,
-                onBack = { navController.popBackStack() },
-                productViewModel = productViewModel
-            )
-        }
-
-        composable(Routes.Booking) {
-            BookingScreen(
-                viewModel = bookingViewModel,
+                productViewModel = productViewModel,
+                bookingViewModel = bookingViewModel,   // agregado
+                currentUserId = userIdStr,             // agregado
+                currentUserName = userName,            // agregado
                 onBack = { navController.popBackStack() }
             )
         }
 
+        // --- BOOKING ---
+        composable(Routes.Booking) {
+
+            val userIdStr = currentUser?.id?.toString() ?: ""
+            val userName = currentUser?.name ?: ""
+
+            BookingScreen(
+                viewModel = bookingViewModel,
+                currentUserId = userIdStr,
+                currentUserName = userName,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // --- ADMIN ---
         composable(Routes.Admin) {
             AdminScreen(
                 productViewModel = productViewModel,
@@ -115,8 +140,8 @@ fun AppNavigation(
         }
     }
 
-    LaunchedEffect(isAdmin) {
-        if (isAdmin == true) {
+    LaunchedEffect(isAdmin, isLoggedIn) {
+        if (isLoggedIn && isAdmin == true) {
             navController.navigate(Routes.Admin) {
                 popUpTo(Routes.Login) { inclusive = true }
             }

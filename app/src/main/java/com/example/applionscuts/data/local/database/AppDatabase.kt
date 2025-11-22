@@ -8,15 +8,23 @@ import com.example.applionscuts.data.local.product.Product
 import com.example.applionscuts.data.local.product.ProductDao
 import com.example.applionscuts.data.local.user.User
 import com.example.applionscuts.data.local.user.UserDao
-
+import com.example.applionscuts.data.local.appointment.AppointmentEntity
+import com.example.applionscuts.data.local.appointment.AppointmentDao
 @Database(
-    entities = [User::class, Product::class],
-    version = 1,
+    entities = [
+        User::class,
+        Product::class,
+        AppointmentEntity::class
+    ],
+    version = 3,  // ⬅ CAMBIA 2 → 3
     exportSchema = false
 )
+
 abstract class AppDatabase : RoomDatabase() {
+
     abstract fun userDao(): UserDao
     abstract fun productDao(): ProductDao
+    abstract fun appointmentDao(): AppointmentDao
 
     companion object {
         @Volatile
@@ -29,11 +37,12 @@ abstract class AppDatabase : RoomDatabase() {
                     AppDatabase::class.java,
                     "lionscuts.db"
                 )
-                    .fallbackToDestructiveMigration()
+                    .fallbackToDestructiveMigration()  // 👈 asegúrate de tener esto
                     .build()
                 INSTANCE = instance
                 instance
             }
         }
+
     }
 }

@@ -33,8 +33,15 @@ import com.example.applionscuts.viewmodel.BookingViewModel
 @Composable
 fun BookingScreen(
     viewModel: BookingViewModel,
+    currentUserId: String,
+    currentUserName: String,
     onBack: () -> Unit
 ) {
+
+    LaunchedEffect(Unit) {
+        viewModel.setUserData(currentUserId, currentUserName)
+    }
+
     val barbers by viewModel.barbers.observeAsState(emptyList())
     val dates by viewModel.availableDates.observeAsState(emptyList())
     val times by viewModel.availableTimes.observeAsState(emptyList())

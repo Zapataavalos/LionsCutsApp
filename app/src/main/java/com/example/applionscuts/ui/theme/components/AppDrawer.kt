@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ExitToApp
+import androidx.compose.material.icons.filled.AdminPanelSettings
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.filled.List
 import androidx.compose.material.icons.filled.Person
@@ -20,10 +21,12 @@ import com.example.applionscuts.R
 
 @Composable
 fun AppDrawer(
+    isAdmin: Boolean,   // <-- NUEVO
     onCloseDrawer: () -> Unit,
     onNavigateToHaircuts: () -> Unit,
     onNavigateToProducts: () -> Unit,
     onNavigateToProfile: () -> Unit,
+    onNavigateToAdmin: () -> Unit, // <-- NUEVO
     onLogout: () -> Unit
 ) {
     ModalDrawerSheet {
@@ -39,17 +42,19 @@ fun AppDrawer(
                 modifier = Modifier
                     .size(100.dp)
                     .clip(RoundedCornerShape(16.dp))
-
             )
             Text("LionsCuts", style = MaterialTheme.typography.headlineSmall)
         }
+
         Divider()
+
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Home, "Inicio") },
             label = { Text("Inicio") },
             selected = false,
             onClick = onCloseDrawer
         )
+
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.List, "Cortes") },
             label = { Text("Ver Cortes") },
@@ -59,6 +64,7 @@ fun AppDrawer(
                 onCloseDrawer()
             }
         )
+
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.ShoppingCart, "Productos") },
             label = { Text("Ver Productos") },
@@ -68,6 +74,7 @@ fun AppDrawer(
                 onCloseDrawer()
             }
         )
+
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Person, "Perfil") },
             label = { Text("Mi Perfil") },
@@ -77,7 +84,22 @@ fun AppDrawer(
                 onCloseDrawer()
             }
         )
+
+        // ⭐⭐⭐ SOLO ADMIN ⭐⭐⭐
+        if (isAdmin) {
+            NavigationDrawerItem(
+                icon = { Icon(Icons.Default.AdminPanelSettings, "Admin") },
+                label = { Text("Panel de Administrador") },
+                selected = false,
+                onClick = {
+                    onNavigateToAdmin()
+                    onCloseDrawer()
+                }
+            )
+        }
+
         Spacer(modifier = Modifier.weight(1f))
+
         NavigationDrawerItem(
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, "Cerrar Sesión") },
             label = { Text("Cerrar Sesión") },

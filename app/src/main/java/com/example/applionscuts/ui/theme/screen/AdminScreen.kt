@@ -15,8 +15,8 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewModelScope
+import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.data.local.product.Product
-import com.example.applionscuts.model.Appointment
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.BookingViewModel
 import kotlinx.coroutines.launch
@@ -205,7 +205,7 @@ fun ProductAdminItem(product: Product, onDelete: () -> Unit) {
 }
 
 @Composable
-fun AppointmentAdminItem(appointment: Appointment) {
+fun AppointmentAdminItem(appointment: AppointmentEntity) {
     Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
             Text("Barbero: ${appointment.barberName}", style = MaterialTheme.typography.bodyMedium)

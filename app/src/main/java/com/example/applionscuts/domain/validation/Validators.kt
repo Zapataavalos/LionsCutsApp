@@ -3,16 +3,12 @@ package com.example.applionscuts.domain.validation
 import android.util.Patterns
 
 class Validators {
+
     fun isValidEmail(email: String): Boolean {
         return Patterns.EMAIL_ADDRESS.matcher(email).matches()
     }
 
     fun isValidPassword(password: String): Boolean {
-        // Requisitos:
-        // - Mínimo 6 caracteres
-        // - Al menos una mayúscula
-        // - Al menos un número
-        // - Al menos un carácter especial
         return password.length >= 6 &&
                 password.any { it.isUpperCase() } &&
                 password.any { it.isDigit() } &&
@@ -27,5 +23,22 @@ class Validators {
             !password.any { it in "!@#$%^&*(),.?\":{}|<>" } -> "Debe contener al menos un carácter especial (ej: !, @, #, $, etc.)"
             else -> null
         }
+    }
+
+    fun isValidName(name: String): Boolean {
+        return name.isNotBlank() && name.all { it.isLetter() || it.isWhitespace() }
+    }
+
+
+    fun isValidChileanPhone(phone: String): Boolean {
+        val digits = phone.filter { it.isDigit() }
+
+        val cleanedNumber = when {
+            digits.startsWith("56") && digits.length > 2 -> digits.substring(2)  // elimina 56
+            digits.startsWith("56") -> ""  // evita crash si es incompleto
+            else -> digits
+        }
+
+        return cleanedNumber.length == 9 && cleanedNumber.startsWith("9")
     }
 }

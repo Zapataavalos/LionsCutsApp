@@ -30,6 +30,7 @@ fun HomeScreen(
     onNavigateToProducts: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToBooking: () -> Unit,
+    onNavigateToAdmin: () -> Unit,   // <-- NUEVO
     onLogout: () -> Unit,
     productViewModel: ProductViewModel,
     authViewModel: AuthViewModel
@@ -39,6 +40,8 @@ fun HomeScreen(
     val context = LocalContext.current
 
     val userName by authViewModel.currentUserName.observeAsState("Usuario")
+    val isAdmin by authViewModel.isAdmin.observeAsState(false)   // <-- NUEVO
+
     var showWelcomeMessage by remember { mutableStateOf(true) }
 
     LaunchedEffect(showWelcomeMessage) {
@@ -52,10 +55,12 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             AppDrawer(
+                isAdmin = isAdmin,  // <-- NUEVO
                 onCloseDrawer = { scope.launch { drawerState.close() } },
                 onNavigateToHaircuts = onNavigateToHaircuts,
                 onNavigateToProducts = onNavigateToProducts,
                 onNavigateToProfile = onNavigateToProfile,
+                onNavigateToAdmin = onNavigateToAdmin,   // <-- NUEVO
                 onLogout = onLogout
             )
         }

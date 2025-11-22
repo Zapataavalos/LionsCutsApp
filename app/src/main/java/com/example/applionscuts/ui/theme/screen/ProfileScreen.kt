@@ -36,9 +36,10 @@ import androidx.core.content.FileProvider
 import coil.compose.AsyncImage
 import java.io.File
 import com.example.applionscuts.R
-import com.example.applionscuts.model.Appointment
+import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.model.UserProfile
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
+import com.example.applionscuts.viewmodel.BookingViewModel
 import com.example.applionscuts.viewmodel.ProfileViewModel
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -46,6 +47,9 @@ import com.example.applionscuts.viewmodel.ProfileViewModel
 fun ProfileScreen(
     viewModel: ProfileViewModel,
     productViewModel: ProductViewModel,
+    currentUserId: String,
+    currentUserName: String,
+    bookingViewModel: BookingViewModel,
     onBack: () -> Unit
 ) {
     val userProfile by viewModel.userProfile.observeAsState()
@@ -57,6 +61,9 @@ fun ProfileScreen(
     val context = LocalContext.current
     var showImageOptions by remember { mutableStateOf(false) }
     var photoUri by remember { mutableStateOf<Uri?>(null) }
+
+
+
 
     // Launcher para la cámara
     val cameraLauncher = rememberLauncherForActivityResult(
@@ -338,7 +345,7 @@ fun FidelitySection(stars: Int, onRedeemClick: () -> Unit) {
 }
 
 @Composable
-fun AppointmentsSection(appointments: List<Appointment>) {
+fun AppointmentsSection(appointments: List<AppointmentEntity>) {
     Column(modifier = Modifier.fillMaxWidth()) {
         Text("Próximas Citas", style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
         Spacer(Modifier.height(8.dp))
@@ -354,14 +361,16 @@ fun AppointmentsSection(appointments: List<Appointment>) {
 }
 
 @Composable
-fun AppointmentItem(appointment: Appointment) {
-    Card(modifier = Modifier.fillMaxWidth(), elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)) {
+fun AppointmentItem(appointment: AppointmentEntity) {
+    Card(modifier = Modifier.fillMaxWidth()) {
         Column(modifier = Modifier.padding(12.dp)) {
-            Text("${appointment.service} con ${appointment.barberName}", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.SemiBold)
-            Text("${appointment.date} a las ${appointment.time}", style = MaterialTheme.typography.bodyMedium)
+            Text("${appointment.service} con ${appointment.barberName}")
+            Text("${appointment.date} a las ${appointment.time}")
         }
     }
 }
+
+
 
 @Composable
 fun RedeemRewardDialog(onDismiss: () -> Unit, onRedeemCut: () -> Unit, onRedeemProduct: () -> Unit) {
