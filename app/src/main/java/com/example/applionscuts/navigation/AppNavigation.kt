@@ -1,8 +1,6 @@
 package com.example.applionscuts.navigation
 
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.runtime.livedata.observeAsState
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
@@ -24,37 +22,27 @@ fun AppNavigation(
     barberViewModel: BarberViewModel
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
-    val isAdmin by authViewModel.isAdmin.observeAsState(false)
     val currentUser by authViewModel.currentUser.observeAsState()
 
     NavHost(
         navController = navController,
-        startDestination =
-            if (isLoggedIn) {
-                if (isAdmin == true) Routes.Admin else Routes.Home
-            } else Routes.Login
+        startDestination = if (isLoggedIn) Routes.Home else Routes.Login
     ) {
 
-        // --- LOGIN ---
+        // LOGIN
         composable(Routes.Login) {
             LoginScreen(
                 authViewModel = authViewModel,
                 onLoginSuccess = {
-                    if (authViewModel.isAdmin.value == true) {
-                        navController.navigate(Routes.Admin) {
-                            popUpTo(Routes.Login) { inclusive = true }
-                        }
-                    } else {
-                        navController.navigate(Routes.Home) {
-                            popUpTo(Routes.Login) { inclusive = true }
-                        }
+                    navController.navigate(Routes.Home) {
+                        popUpTo(Routes.Login) { inclusive = true }
                     }
                 },
                 onNavigateToRegister = { navController.navigate(Routes.Register) }
             )
         }
 
-        // --- REGISTER ---
+        // REGISTER
         composable(Routes.Register) {
             RegisterScreen(
                 authViewModel = authViewModel,
@@ -66,7 +54,7 @@ fun AppNavigation(
             )
         }
 
-        // --- HOME ---
+        // HOME
         composable(Routes.Home) {
             HomeScreen(
                 onNavigateToHaircuts = { navController.navigate(Routes.Haircuts) },
@@ -85,7 +73,7 @@ fun AppNavigation(
             )
         }
 
-        // --- PRODUCTS ---
+        // PRODUCTS
         composable(Routes.Products) {
             ProductsScreen(
                 productViewModel = productViewModel,
@@ -93,7 +81,7 @@ fun AppNavigation(
             )
         }
 
-        // --- HAIRCUTS ---
+        // HAIRCUTS
         composable(Routes.Haircuts) {
             HaircutsScreen(
                 viewModel = haircutViewModel,
@@ -102,23 +90,50 @@ fun AppNavigation(
             )
         }
 
-        // --- PROFILE ---
+        // -------------------------------------------------------------
+// PROFILE
+// -------------------------------------------------------------
         composable(Routes.Profile) {
 
             val userIdStr = currentUser?.id?.toString() ?: ""
             val userName = currentUser?.name ?: ""
 
+            // 🔥 ACTUALIZAR PROFILEVIEWMODEL CON DATOS DE AUTHVIEWMODEL
+            LaunchedEffect(currentUser) {
+                currentUser?.let { u ->
+                    profileViewModel.updateUserFromAuth(
+                        id = u.id.toString(),
+                        name = u.name,
+                        email = u.email,
+                        phone = u.phone
+                    )
+                }
+            }
+
             ProfileScreen(
                 viewModel = profileViewModel,
                 productViewModel = productViewModel,
-                bookingViewModel = bookingViewModel,   // agregado
-                currentUserId = userIdStr,             // agregado
-                currentUserName = userName,            // agregado
+                bookingViewModel = bookingViewModel,
+                currentUserId = userIdStr,
+                currentUserName = userName,
+                onBack = { navController.popBackStack() },
+                onNavigateToEditProfile = {
+                    navController.navigate(Routes.ProfileEdit)
+                }
+            )
+        }
+
+
+        // PROFILE EDIT
+        composable(Routes.ProfileEdit) {
+
+            ProfileEditScreen(
+                viewModel = profileViewModel,
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // --- BOOKING ---
+        // BOOKING
         composable(Routes.Booking) {
 
             val userIdStr = currentUser?.id?.toString() ?: ""
@@ -132,7 +147,7 @@ fun AppNavigation(
             )
         }
 
-        // --- ADMIN ---
+        // ADMIN
         composable(Routes.Admin) {
             AdminScreen(
                 productViewModel = productViewModel,
@@ -141,14 +156,6 @@ fun AppNavigation(
                 haircutViewModel = haircutViewModel,
                 onBack = { navController.popBackStack() }
             )
-        }
-    }
-
-    LaunchedEffect(isAdmin, isLoggedIn) {
-        if (isLoggedIn && isAdmin == true) {
-            navController.navigate(Routes.Admin) {
-                popUpTo(Routes.Login) { inclusive = true }
-            }
         }
     }
 }

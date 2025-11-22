@@ -13,6 +13,7 @@ fun AppTopBar(
     title: String,
     onMenuClick: () -> Unit,
     onCartClick: () -> Unit,
+    extraActions: (@Composable () -> Unit)? = null  // ⭐ Nuevo
 ) {
     TopAppBar(
         title = { Text(text = title) },
@@ -25,6 +26,8 @@ fun AppTopBar(
             }
         },
         actions = {
+            // ⭐ Acciones extras (como el icono de editar perfil)
+            extraActions?.invoke()
 
             IconButton(onClick = onCartClick) {
                 Icon(

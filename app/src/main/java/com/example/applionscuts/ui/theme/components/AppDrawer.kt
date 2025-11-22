@@ -21,15 +21,19 @@ import com.example.applionscuts.R
 
 @Composable
 fun AppDrawer(
-    isAdmin: Boolean,   // <-- NUEVO
+    isAdmin: Boolean,
     onCloseDrawer: () -> Unit,
     onNavigateToHaircuts: () -> Unit,
     onNavigateToProducts: () -> Unit,
     onNavigateToProfile: () -> Unit,
-    onNavigateToAdmin: () -> Unit, // <-- NUEVO
+    onNavigateToAdmin: () -> Unit,
     onLogout: () -> Unit
 ) {
     ModalDrawerSheet {
+
+        // -----------------------------------
+        // HEADER
+        // -----------------------------------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -43,16 +47,24 @@ fun AppDrawer(
                     .size(100.dp)
                     .clip(RoundedCornerShape(16.dp))
             )
-            Text("LionsCuts", style = MaterialTheme.typography.headlineSmall)
+            Text(
+                text = "LionsCuts",
+                style = MaterialTheme.typography.headlineSmall
+            )
         }
 
         Divider()
 
+        // -----------------------------------
+        // OPCIONES GENERALES
+        // -----------------------------------
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Home, "Inicio") },
             label = { Text("Inicio") },
             selected = false,
-            onClick = onCloseDrawer
+            onClick = {
+                onCloseDrawer()
+            }
         )
 
         NavigationDrawerItem(
@@ -85,10 +97,14 @@ fun AppDrawer(
             }
         )
 
-        // ⭐⭐⭐ SOLO ADMIN ⭐⭐⭐
+        // -----------------------------------
+        // SECCIÓN EXCLUSIVA PARA ADMIN
+        // -----------------------------------
         if (isAdmin) {
+            Divider(modifier = Modifier.padding(vertical = 8.dp))
+
             NavigationDrawerItem(
-                icon = { Icon(Icons.Default.AdminPanelSettings, "Admin") },
+                icon = { Icon(Icons.Default.AdminPanelSettings, "Panel Admin") },
                 label = { Text("Panel de Administrador") },
                 selected = false,
                 onClick = {
@@ -100,6 +116,9 @@ fun AppDrawer(
 
         Spacer(modifier = Modifier.weight(1f))
 
+        // -----------------------------------
+        // CERRAR SESIÓN
+        // -----------------------------------
         NavigationDrawerItem(
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, "Cerrar Sesión") },
             label = { Text("Cerrar Sesión") },

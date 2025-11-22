@@ -10,4 +10,7 @@ object Routes {
     const val Booking = "booking"
 
     const val Admin = "admin"
+
+    const val ProfileEdit = "profileEdit"
+
 }

@@ -30,7 +30,7 @@ fun HomeScreen(
     onNavigateToProducts: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToBooking: () -> Unit,
-    onNavigateToAdmin: () -> Unit,   // <-- NUEVO
+    onNavigateToAdmin: () -> Unit,
     onLogout: () -> Unit,
     productViewModel: ProductViewModel,
     authViewModel: AuthViewModel
@@ -40,14 +40,15 @@ fun HomeScreen(
     val context = LocalContext.current
 
     val userName by authViewModel.currentUserName.observeAsState("Usuario")
-    val isAdmin by authViewModel.isAdmin.observeAsState(false)   // <-- NUEVO
+    val isAdmin by authViewModel.isAdmin.observeAsState(false)
 
-    var showWelcomeMessage by remember { mutableStateOf(true) }
+    var showWelcomeToast by remember { mutableStateOf(true) }
 
-    LaunchedEffect(showWelcomeMessage) {
-        if (showWelcomeMessage) {
+    // Mensaje de bienvenida SOLO la primera vez
+    LaunchedEffect(showWelcomeToast) {
+        if (showWelcomeToast) {
             Toast.makeText(context, "¡Bienvenido, $userName!", Toast.LENGTH_SHORT).show()
-            showWelcomeMessage = false
+            showWelcomeToast = false
         }
     }
 
@@ -55,16 +56,17 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             AppDrawer(
-                isAdmin = isAdmin,  // <-- NUEVO
+                isAdmin = isAdmin,
                 onCloseDrawer = { scope.launch { drawerState.close() } },
                 onNavigateToHaircuts = onNavigateToHaircuts,
                 onNavigateToProducts = onNavigateToProducts,
                 onNavigateToProfile = onNavigateToProfile,
-                onNavigateToAdmin = onNavigateToAdmin,   // <-- NUEVO
+                onNavigateToAdmin = onNavigateToAdmin,
                 onLogout = onLogout
             )
         }
     ) {
+
         Scaffold(
             topBar = {
                 AppTopBar(
@@ -73,23 +75,30 @@ fun HomeScreen(
                     onCartClick = { productViewModel.onShowCart() }
                 )
             }
-        ) { paddingValues ->
+        ) { padding ->
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(paddingValues)
+                    .padding(padding)
             ) {
+
+                // Imagen de fondo
                 Image(
                     painter = painterResource(id = R.drawable.leons),
                     contentDescription = "Fondo de barbería",
                     modifier = Modifier.fillMaxSize(),
                     contentScale = ContentScale.Crop
                 )
+
+                // Capa oscura
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
                         .background(Color.Black.copy(alpha = 0.5f))
                 )
+
+                // Contenido principal
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
@@ -97,27 +106,33 @@ fun HomeScreen(
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
+
                     Text(
                         text = "Agenda tu cita en",
                         style = MaterialTheme.typography.titleLarge,
                         color = Color.White
                     )
+
                     Text(
                         text = "LIONS CUTS",
                         style = MaterialTheme.typography.headlineLarge,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary
                     )
-                    Spacer(modifier = Modifier.height(16.dp))
+
+                    Spacer(Modifier.height(16.dp))
+
                     Text(
                         text = "El mejor estilo y servicio en un solo lugar. Calidad y experiencia a tu alcance.",
                         style = MaterialTheme.typography.bodyMedium,
                         color = Color.White,
                         textAlign = TextAlign.Center
                     )
-                    Spacer(modifier = Modifier.height(32.dp))
+
+                    Spacer(Modifier.height(32.dp))
+
                     Button(onClick = onNavigateToBooking) {
-                        Text(text = "Agendar Cita")
+                        Text("Agendar Cita")
                     }
                 }
             }
