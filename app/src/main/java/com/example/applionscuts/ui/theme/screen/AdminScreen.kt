@@ -1,30 +1,29 @@
 // Archivo: com/example/applionscuts/ui/screen/AdminScreen.kt
 package com.example.applionscuts.ui.screen
 
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.CalendarMonth
+import androidx.compose.material.icons.filled.ContentCut
+import androidx.compose.material.icons.filled.Inventory2
+import androidx.compose.material.icons.filled.People
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.livedata.observeAsState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.example.applionscuts.data.local.appointment.AppointmentEntity
-import com.example.applionscuts.data.local.product.Product
-import com.example.applionscuts.model.Haircut
 import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.BookingViewModel
 import com.example.applionscuts.viewmodel.HaircutViewModel
 
 // -----------------------------------------------------
-// ADMIN SCREEN ROOT
+// ADMIN ROOT
 // -----------------------------------------------------
 @Composable
 fun AdminScreen(
@@ -34,212 +33,151 @@ fun AdminScreen(
     haircutViewModel: HaircutViewModel,
     onBack: () -> Unit
 ) {
-    var screen by remember { mutableStateOf("main") }
+    var currentScreen by remember { mutableStateOf("dashboard") }
 
-    when (screen) {
-        "main" -> AdminMainScreen(
-            productViewModel = productViewModel,
-            bookingViewModel = bookingViewModel,
-            onGoToBarbers = { screen = "barbers" },
-            onGoToServices = { screen = "services" },
-            onBack = onBack
+    when (currentScreen) {
+
+        "dashboard" -> AdminDashboard(
+            onBack = onBack,
+            onGoToBarbers = { currentScreen = "barbers" },
+            onGoToServices = { currentScreen = "services" },
+            onGoToProducts = { currentScreen = "products" },
+            onGoToAppointments = { currentScreen = "appointments" }
         )
 
         "barbers" -> BarberAdminScreen(
             barberViewModel = barberViewModel,
-            onBack = { screen = "main" }
+            onBack = { currentScreen = "dashboard" }
         )
 
         "services" -> ServiceAdminScreen(
             haircutViewModel = haircutViewModel,
-            onBack = { screen = "main" }
+            onBack = { currentScreen = "dashboard" }
+        )
+
+        "products" -> AdminProductScreen(
+            productViewModel = productViewModel,
+            onBack = { currentScreen = "dashboard" }
+        )
+
+        "appointments" -> AdminAppointmentsScreen(
+            bookingViewModel = bookingViewModel,
+            onBack = { currentScreen = "dashboard" }
         )
     }
 }
 
-// -----------------------------------------------------
-// MAIN ADMIN PANEL
-// -----------------------------------------------------
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdminMainScreen(
-    productViewModel: ProductViewModel,
-    bookingViewModel: BookingViewModel,
+fun AdminDashboard(
+    onBack: () -> Unit,
     onGoToBarbers: () -> Unit,
     onGoToServices: () -> Unit,
-    onBack: () -> Unit
+    onGoToProducts: () -> Unit,
+    onGoToAppointments: () -> Unit
 ) {
-    var name by remember { mutableStateOf("") }
-    var brand by remember { mutableStateOf("Lions Basics") }
-    var price by remember { mutableStateOf("") }
-    var description by remember { mutableStateOf("") }
-    var longDescription by remember { mutableStateOf("") }
-    var stock by remember { mutableStateOf("30") }
-
-    val products by productViewModel.products.observeAsState(emptyList())
-    val appointments by bookingViewModel.appointments.observeAsState(emptyList())
-
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Panel de Administrador") },
+                title = { Text("Panel de Administración") },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.AutoMirrored.Filled.ArrowBack, "Volver")
+                        Icon(Icons.AutoMirrored.Filled.ArrowBack, contentDescription = "Volver")
                     }
                 }
             )
         }
     ) { padding ->
 
-        LazyColumn(
-            modifier = Modifier.padding(padding).padding(16.dp)
+        Column(
+            modifier = Modifier
+                .padding(padding)
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(20.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
-            // Gestión de barberos y servicios
-            item {
-                Button(
-                    onClick = onGoToBarbers,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Gestionar Barberos") }
+            AdminModuleCard(
+                title = "Barberos",
+                description = "Administrar barberos",
+                icon = Icons.Default.People,
+                color = Color(0xFF2196F3),
+                onClick = onGoToBarbers
+            )
 
-                Spacer(Modifier.height(16.dp))
+            AdminModuleCard(
+                title = "Servicios",
+                description = "Administrar cortes y servicios",
+                icon = Icons.Default.ContentCut,
+                color = Color(0xFFE91E63),
+                onClick = onGoToServices
+            )
 
-                Button(
-                    onClick = onGoToServices,
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Gestionar Servicios") }
+            AdminModuleCard(
+                title = "Productos",
+                description = "Administrar catálogo de productos",
+                icon = Icons.Default.Inventory2,
+                color = Color(0xFF4CAF50),
+                onClick = onGoToProducts
+            )
 
-                Spacer(Modifier.height(24.dp))
-            }
-
-            // AGREGAR PRODUCTO
-            item {
-                Text("Agregar Producto", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(8.dp))
-
-                OutlinedTextField(value = name, onValueChange = { name = it },
-                    label = { Text("Nombre") }, modifier = Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = brand, onValueChange = { brand = it },
-                    label = { Text("Marca") }, modifier = Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = price, onValueChange = { price = it },
-                    label = { Text("Precio") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = description, onValueChange = { description = it },
-                    label = { Text("Descripción corta") }, modifier = Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = longDescription, onValueChange = { longDescription = it },
-                    label = { Text("Descripción larga") }, modifier = Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(8.dp))
-                OutlinedTextField(value = stock, onValueChange = { stock = it },
-                    label = { Text("Stock") },
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                    modifier = Modifier.fillMaxWidth())
-
-                Spacer(Modifier.height(8.dp))
-
-                Button(
-                    onClick = {
-                        if (name.isNotBlank() && price.isNotBlank()) {
-                            val newProduct = Product(
-                                name = name,
-                                brand = brand,
-                                price = price.toDouble(),
-                                description = description,
-                                longDescription = longDescription,
-                                imageResId = com.example.applionscuts.R.drawable.leon,
-                                stock = stock.toInt()
-                            )
-                            productViewModel.addProductToDatabase(newProduct)
-
-                            name = ""
-                            brand = "Lions Basics"
-                            price = ""
-                            description = ""
-                            longDescription = ""
-                            stock = "30"
-                        }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) { Text("Agregar Producto") }
-
-                Spacer(Modifier.height(24.dp))
-            }
-
-            // LISTA DE PRODUCTOS
-            item {
-                Text("Productos", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(8.dp))
-            }
-
-            items(products) { product ->
-                ProductAdminItem(
-                    product = product,
-                    onDelete = { productViewModel.deleteProductFromDatabase(product) }
-                )
-                Spacer(Modifier.height(8.dp))
-            }
-
-            // CITAS
-            item {
-                Spacer(Modifier.height(24.dp))
-                Text("Citas Agendadas", style = MaterialTheme.typography.headlineSmall)
-                Spacer(Modifier.height(8.dp))
-
-                if (appointments.isEmpty()) {
-                    Text("No hay citas agendadas.")
-                }
-            }
-
-            items(appointments) { appointment ->
-                AppointmentAdminItem(appointment)
-                Spacer(Modifier.height(8.dp))
-            }
+            AdminModuleCard(
+                title = "Citas",
+                description = "Ver citas agendadas",
+                icon = Icons.Default.CalendarMonth,
+                color = Color(0xFFFF9800),
+                onClick = onGoToAppointments
+            )
         }
     }
 }
 
 // -----------------------------------------------------
-// COMPONENTES
+// TARJETAS
 // -----------------------------------------------------
 @Composable
-fun ProductAdminItem(product: Product, onDelete: () -> Unit) {
-    Card(modifier = Modifier.fillMaxWidth()) {
+fun AdminModuleCard(
+    title: String,
+    description: String,
+    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    color: Color,
+    onClick: () -> Unit
+) {
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(140.dp)
+            .clickable(onClick = onClick),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(containerColor = color.copy(alpha = 0.15f))
+    ) {
         Row(
-            modifier = Modifier.padding(12.dp),
-            horizontalArrangement = Arrangement.SpaceBetween,
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(20.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column {
-                Text(product.name, style = MaterialTheme.typography.titleMedium)
-                Text("Marca: ${product.brand}")
-                Text("$${product.price}")
-                Text("Stock: ${product.stock}")
-            }
-            IconButton(onClick = onDelete) {
-                Icon(Icons.Default.Delete, "Eliminar", tint = MaterialTheme.colorScheme.error)
-            }
-        }
-    }
-}
 
-@Composable
-fun AppointmentAdminItem(appointment: AppointmentEntity) {
-    Card(modifier = Modifier.fillMaxWidth()) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Text("Barbero: ${appointment.barberName}")
-            Text("Servicio: ${appointment.service}")
-            Text("Fecha: ${appointment.date}")
-            Text("Hora: ${appointment.time}")
+            Box(
+                modifier = Modifier
+                    .size(60.dp)
+                    .background(color.copy(alpha = 0.8f), RoundedCornerShape(16.dp)),
+                contentAlignment = Alignment.Center
+            ) {
+                Icon(
+                    icon,
+                    contentDescription = null,
+                    tint = Color.White,
+                    modifier = Modifier.size(34.dp)
+                )
+            }
+
+            Spacer(modifier = Modifier.width(20.dp))
+
+            Column {
+                Text(title, style = MaterialTheme.typography.titleLarge)
+                Text(description, style = MaterialTheme.typography.bodyMedium)
+            }
         }
     }
 }
