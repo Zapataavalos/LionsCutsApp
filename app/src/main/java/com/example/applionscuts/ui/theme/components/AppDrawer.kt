@@ -21,7 +21,7 @@ import com.example.applionscuts.R
 
 @Composable
 fun AppDrawer(
-    userName: String,        // ⭐ NUEVO
+    userName: String,
     isAdmin: Boolean,
     onCloseDrawer: () -> Unit,
     onNavigateToHaircuts: () -> Unit,
@@ -32,9 +32,7 @@ fun AppDrawer(
 ) {
     ModalDrawerSheet {
 
-        // -----------------------------------
         // HEADER
-        // -----------------------------------
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -49,7 +47,7 @@ fun AppDrawer(
                     .clip(RoundedCornerShape(16.dp))
             )
 
-            // Nombre de la App (fijo)
+            // Nombre de la App
             Text(
                 text = "LionsCuts",
                 style = MaterialTheme.typography.headlineSmall
@@ -65,9 +63,8 @@ fun AppDrawer(
 
         Divider()
 
-        // -----------------------------------
         // OPCIONES GENERALES
-        // -----------------------------------
+
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Home, "Inicio") },
             label = { Text("Inicio") },

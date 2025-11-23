@@ -44,9 +44,7 @@ fun HomeScreen(
     val isAdmin by authViewModel.isAdmin.observeAsState(false)
     val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
 
-    // -----------------------------
-    // CONTROL DEL MENSAJE BIENVENIDA
-    // -----------------------------
+    // CONTROL DEL MENSAJE BIENVENIDA (toast)
     var hasWelcomed by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isLoggedIn) {
@@ -63,7 +61,7 @@ fun HomeScreen(
         drawerState = drawerState,
         drawerContent = {
             AppDrawer(
-                userName = userName,      // ⭐ PASAR EL NOMBRE ACTUAL
+                userName = userName,
                 isAdmin = isAdmin,
                 onCloseDrawer = { scope.launch { drawerState.close() } },
                 onNavigateToHaircuts = onNavigateToHaircuts,

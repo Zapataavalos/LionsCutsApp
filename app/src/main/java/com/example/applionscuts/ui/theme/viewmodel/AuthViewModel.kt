@@ -33,14 +33,15 @@ class AuthViewModel(
     private val _isAdmin = MutableLiveData<Boolean>()
     val isAdmin: LiveData<Boolean> = _isAdmin
 
+    private val _passwordResetMessage = MutableLiveData<String?>()
+    val passwordResetMessage: LiveData<String?> = _passwordResetMessage
 
-    // ------------------------------------------------------------
+
     // LOGIN
-    // ------------------------------------------------------------
     fun login(email: String, password: String) {
         _errorMessage.value = null
 
-        // --- LOGIN ADMIN SIN BASE DE DATOS ---
+        // LOGIN ADMIN MANUAL
         if (email == "Admin@admin.cl" && password == "1234A.") {
 
             val adminUser = User(
@@ -74,7 +75,7 @@ class AuthViewModel(
             return
         }
 
-        // LOGIN NORMAL
+        // LOGIN NORMAL BD LOCAL
         viewModelScope.launch {
             val result = userRepository.login(email, password)
 
@@ -96,9 +97,39 @@ class AuthViewModel(
     }
 
 
-    // ------------------------------------------------------------
+    // Recuperar contraseña
+
+    fun recoverPassword(email: String) {
+        _passwordResetMessage.value = null
+
+        if (email.isBlank()) {
+            _passwordResetMessage.value = "Debes ingresar un email"
+            return
+        }
+
+        if (!validators.isValidEmail(email)) {
+            _passwordResetMessage.value = "El email no es válido"
+            return
+        }
+
+        viewModelScope.launch {
+
+            val exists = userRepository.emailExists(email)
+
+            if (exists) {
+                // Aquí luego llamarás a tu microservicio real
+                _passwordResetMessage.value =
+                    "Se envió un enlace de recuperación a tu correo"
+            } else {
+                _passwordResetMessage.value =
+                    "Si el correo está registrado, recibirás un enlace de recuperación"
+            }
+        }
+    }
+
+
     // REGISTRO
-    // ------------------------------------------------------------
+
     fun register(name: String, email: String, phone: String, password: String, confirmPassword: String) {
         _errorMessage.value = null
 
@@ -123,7 +154,6 @@ class AuthViewModel(
                     val result = userRepository.register(name, email, phone, password)
 
                     if (result.isSuccess) {
-
                         val newUser = User(
                             id = 0,
                             name = name,
@@ -149,18 +179,10 @@ class AuthViewModel(
     }
 
 
-    // ------------------------------------------------------------
-    // 🔥 ACTUALIZAR SOLO EL NOMBRE GLOBAL
-    // ------------------------------------------------------------
-    fun updateCurrentUserName(newName: String) {
-        _currentUserName.value = newName
-        _currentUser.value = _currentUser.value?.copy(name = newName)
-    }
 
 
     // ------------------------------------------------------------
-    // 🔥 ACTUALIZAR NOMBRE Y TELÉFONO (SINCRONIZACIÓN GLOBAL)
-    // ------------------------------------------------------------
+    // Actualizar datos del usuario, AppDrawer, ProfileScreen, toast de bienvenida, etc...
     fun updateCurrentUser(name: String? = null, phone: String? = null) {
         val current = _currentUser.value ?: return
 
@@ -173,10 +195,14 @@ class AuthViewModel(
         _currentUserName.value = updatedUser.name
     }
 
+    fun updateCurrentUserName(newName: String) {
+        _currentUserName.value = newName
+        _currentUser.value = _currentUser.value?.copy(name = newName)
+    }
 
-    // ------------------------------------------------------------
-    // LOGOUT
-    // ------------------------------------------------------------
+
+    // Cerrar sesion
+
     fun logout() {
         _isLoggedIn.value = false
         _currentUserName.value = ""

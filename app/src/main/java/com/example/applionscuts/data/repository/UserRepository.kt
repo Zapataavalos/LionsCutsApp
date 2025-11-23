@@ -6,6 +6,8 @@ import com.example.applionscuts.data.local.user.UserDao
 class UserRepository(
     private val userDao: UserDao
 ) {
+
+    // LOGIN
     suspend fun login(email: String, password: String): Result<User> {
         return try {
             val user = userDao.loginUser(email, password)
@@ -16,16 +18,29 @@ class UserRepository(
         }
     }
 
+    // REGISTRO
     suspend fun register(name: String, email: String, phone: String, password: String): Result<Unit> {
         return try {
             val existing = userDao.getUserByEmail(email)
             if (existing != null)
                 return Result.failure(Exception("El usuario ya existe"))
-            userDao.insertUser(User(name = name, email = email, phone = phone, password = password))
+
+            userDao.insertUser(
+                User(
+                    name = name,
+                    email = email,
+                    phone = phone,
+                    password = password
+                )
+            )
             Result.success(Unit)
         } catch (e: Exception) {
             Result.failure(e)
         }
     }
 
+    // Verificar si un email existe (para recuperar contraseña)
+    suspend fun emailExists(email: String): Boolean {
+        return userDao.getUserByEmail(email) != null
+    }
 }

@@ -87,7 +87,7 @@ fun ServiceAdminScreen(
                             haircutViewModel.addHaircut(
                                 name = name,
                                 description = description,
-                                longDesc = longDesc,   // <--- CORRECTO
+                                longDesc = longDesc,
                                 price = price.toDouble(),
                                 imageResId = com.example.applionscuts.R.drawable.leon
                             )

@@ -22,9 +22,8 @@ import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.BookingViewModel
 import com.example.applionscuts.viewmodel.HaircutViewModel
 
-// -----------------------------------------------------
+
 // ADMIN ROOT
-// -----------------------------------------------------
 @Composable
 fun AdminScreen(
     productViewModel: ProductViewModel,
@@ -132,9 +131,7 @@ fun AdminDashboard(
     }
 }
 
-// -----------------------------------------------------
-// TARJETAS
-// -----------------------------------------------------
+// Tarjetas
 @Composable
 fun AdminModuleCard(
     title: String,

@@ -29,7 +29,7 @@ fun AppNavigation(
         startDestination = if (isLoggedIn) Routes.Home else Routes.Login
     ) {
 
-        // LOGIN
+        // ---------------- LOGIN ----------------
         composable(Routes.Login) {
             LoginScreen(
                 authViewModel = authViewModel,
@@ -38,11 +38,12 @@ fun AppNavigation(
                         popUpTo(Routes.Login) { inclusive = true }
                     }
                 },
-                onNavigateToRegister = { navController.navigate(Routes.Register) }
+                onNavigateToRegister = { navController.navigate(Routes.Register) },
+                onNavigateToForgotPassword = { navController.navigate(Routes.ForgotPassword) }
             )
         }
 
-        // REGISTER
+        // ---------------- REGISTER ----------------
         composable(Routes.Register) {
             RegisterScreen(
                 authViewModel = authViewModel,
@@ -54,7 +55,15 @@ fun AppNavigation(
             )
         }
 
-        // HOME
+        // ---------------- FORGOT PASSWORD ----------------
+        composable(Routes.ForgotPassword) {
+            ForgotPasswordScreen(
+                authViewModel = authViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        // ---------------- HOME ----------------
         composable(Routes.Home) {
             HomeScreen(
                 onNavigateToHaircuts = { navController.navigate(Routes.Haircuts) },
@@ -73,7 +82,7 @@ fun AppNavigation(
             )
         }
 
-        // PRODUCTS
+        // ---------------- PRODUCTS ----------------
         composable(Routes.Products) {
             ProductsScreen(
                 productViewModel = productViewModel,
@@ -81,7 +90,7 @@ fun AppNavigation(
             )
         }
 
-        // HAIRCUTS
+        // ---------------- HAIRCUTS ----------------
         composable(Routes.Haircuts) {
             HaircutsScreen(
                 viewModel = haircutViewModel,
@@ -90,12 +99,11 @@ fun AppNavigation(
             )
         }
 
-        // PROFILE
+        // ---------------- PROFILE ----------------
         composable(Routes.Profile) {
 
             val user = currentUser
 
-            // Sincronizar datos
             LaunchedEffect(user) {
                 if (user != null) {
                     profileViewModel.updateUserFromAuth(
@@ -114,22 +122,20 @@ fun AppNavigation(
                 currentUserId = user?.id?.toString() ?: "",
                 currentUserName = user?.name ?: "",
                 onBack = { navController.popBackStack() },
-                onNavigateToEditProfile = {
-                    navController.navigate(Routes.ProfileEdit)
-                }
+                onNavigateToEditProfile = { navController.navigate(Routes.ProfileEdit) }
             )
         }
 
-        // PROFILE EDIT
+        // ---------------- PROFILE EDIT ----------------
         composable(Routes.ProfileEdit) {
             ProfileEditScreen(
                 viewModel = profileViewModel,
-                authViewModel = authViewModel,  // ⭐ Se pasa correctamente
+                authViewModel = authViewModel,
                 onBack = { navController.popBackStack() }
             )
         }
 
-        // BOOKING
+        // ---------------- BOOKING ----------------
         composable(Routes.Booking) {
             val user = currentUser
 
@@ -141,7 +147,7 @@ fun AppNavigation(
             )
         }
 
-        // ADMIN
+        // ---------------- ADMIN ----------------
         composable(Routes.Admin) {
             AdminScreen(
                 productViewModel = productViewModel,

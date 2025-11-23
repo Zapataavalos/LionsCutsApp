@@ -22,7 +22,7 @@ fun AppTopBar(
         title = { Text(text = title) },
         navigationIcon = {
             if (showBackButton) {
-                // 🔙 Mostrar flecha atrás
+                //  Mostrar flecha atrás
                 IconButton(onClick = onBackClick) {
                     Icon(
                         imageVector = Icons.AutoMirrored.Filled.ArrowBack,
@@ -30,7 +30,7 @@ fun AppTopBar(
                     )
                 }
             } else {
-                // ☰ Mostrar menú
+                //  Mostrar menú
                 IconButton(onClick = { onMenuClick?.invoke() }) {
                     Icon(
                         imageVector = Icons.Default.Menu,
@@ -41,7 +41,7 @@ fun AppTopBar(
         },
         actions = {
             extraActions?.invoke()
-
+            // Mostrar icono del carrito
             IconButton(onClick = onCartClick) {
                 Icon(
                     imageVector = Icons.Default.ShoppingCart,

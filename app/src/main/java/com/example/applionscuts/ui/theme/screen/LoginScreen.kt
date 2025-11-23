@@ -24,7 +24,8 @@ import com.example.applionscuts.viewmodel.AuthViewModel
 fun LoginScreen(
     authViewModel: AuthViewModel,
     onLoginSuccess: () -> Unit,
-    onNavigateToRegister: () -> Unit
+    onNavigateToRegister: () -> Unit,
+    onNavigateToForgotPassword: () -> Unit
 ) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
@@ -55,19 +56,25 @@ fun LoginScreen(
                     .clip(RoundedCornerShape(16.dp)),
                 contentScale = ContentScale.Crop
             )
+
             Spacer(modifier = Modifier.height(24.dp))
+
             Text(
                 "Iniciar Sesión",
                 style = MaterialTheme.typography.headlineMedium
             )
+
             Spacer(modifier = Modifier.height(16.dp))
+
             OutlinedTextField(
                 value = email,
                 onValueChange = { email = it },
                 label = { Text("Email") },
                 modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(modifier = Modifier.height(8.dp))
+
             OutlinedTextField(
                 value = password,
                 onValueChange = { password = it },
@@ -75,23 +82,37 @@ fun LoginScreen(
                 visualTransformation = PasswordVisualTransformation(),
                 modifier = Modifier.fillMaxWidth()
             )
+
             Spacer(modifier = Modifier.height(16.dp))
+
             errorMessage?.let {
-                Text(text = it, color = MaterialTheme.colorScheme.error)
+                Text(it, color = MaterialTheme.colorScheme.error)
                 Spacer(modifier = Modifier.height(8.dp))
             }
+
             Button(
                 onClick = { authViewModel.login(email, password) },
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Text("Entrar")
             }
+
             Spacer(modifier = Modifier.height(16.dp))
+
             Text(
                 text = "¿No tienes cuenta? Regístrate",
                 modifier = Modifier.clickable { onNavigateToRegister() },
                 color = MaterialTheme.colorScheme.primary
             )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = "¿Olvidaste tu contraseña?",
+                modifier = Modifier.clickable { onNavigateToForgotPassword() },
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
+

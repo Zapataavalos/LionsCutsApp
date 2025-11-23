@@ -22,7 +22,7 @@ import kotlinx.coroutines.launch
 @Composable
 fun ProfileEditScreen(
     viewModel: ProfileViewModel,
-    authViewModel: AuthViewModel,   // ← NECESARIO para actualizar el nombre global
+    authViewModel: AuthViewModel,
     onBack: () -> Unit
 ) {
     val user = viewModel.userProfile.observeAsState().value
