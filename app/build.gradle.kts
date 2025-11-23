@@ -101,4 +101,14 @@ dependencies {
 
     // Procesamiento y carga de imágenes
     implementation("io.coil-kt:coil-compose:2.7.0") // Cargar y mostrar imágenes (URLs, archivos, etc.)
+
+// ==== AGREGADOS PARA REST ====
+    // Retrofit base
+    implementation("com.squareup.retrofit2:retrofit:2.11.0") // <-- NUEVO
+    // Convertidor JSON con Gson
+    implementation("com.squareup.retrofit2:converter-gson:2.11.0") // <-- NUEVO
+    // OkHttp y logging interceptor
+    implementation("com.squareup.okhttp3:okhttp:4.12.0") // <-- NUEVO
+    implementation("com.squareup.okhttp3:logging-interceptor:4.12.0") // <-- NUEVO
+
 }
