@@ -34,6 +34,7 @@ fun HomeScreen(
     onNavigateToAdmin: () -> Unit,
     onLogout: () -> Unit,
     productViewModel: ProductViewModel,
+    onNavigateToUserPurchases: () -> Unit,
     authViewModel: AuthViewModel
 ) {
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
@@ -68,6 +69,7 @@ fun HomeScreen(
                 onNavigateToProducts = onNavigateToProducts,
                 onNavigateToProfile = onNavigateToProfile,
                 onNavigateToAdmin = onNavigateToAdmin,
+                onNavigateToUserPurchases = onNavigateToUserPurchases,
                 onLogout = onLogout
             )
 

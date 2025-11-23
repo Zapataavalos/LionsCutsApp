@@ -1,4 +1,3 @@
-// Archivo: com/example/applionscuts/ui/screen/AdminScreen.kt
 package com.example.applionscuts.ui.screen
 
 import androidx.compose.foundation.background
@@ -11,6 +10,7 @@ import androidx.compose.material.icons.filled.CalendarMonth
 import androidx.compose.material.icons.filled.ContentCut
 import androidx.compose.material.icons.filled.Inventory2
 import androidx.compose.material.icons.filled.People
+import androidx.compose.material.icons.filled.ReceiptLong
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,15 +21,17 @@ import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.BookingViewModel
 import com.example.applionscuts.viewmodel.HaircutViewModel
+import com.example.applionscuts.viewmodel.PurchaseViewModel
 
 
-// ADMIN ROOT
+// ROOT
 @Composable
 fun AdminScreen(
     productViewModel: ProductViewModel,
     bookingViewModel: BookingViewModel,
     barberViewModel: BarberViewModel,
     haircutViewModel: HaircutViewModel,
+    purchaseViewModel: PurchaseViewModel,  // ⭐ NECESARIO
     onBack: () -> Unit
 ) {
     var currentScreen by remember { mutableStateOf("dashboard") }
@@ -41,7 +43,8 @@ fun AdminScreen(
             onGoToBarbers = { currentScreen = "barbers" },
             onGoToServices = { currentScreen = "services" },
             onGoToProducts = { currentScreen = "products" },
-            onGoToAppointments = { currentScreen = "appointments" }
+            onGoToAppointments = { currentScreen = "appointments" },
+            onGoToPurchases = { currentScreen = "purchases" }  // ⭐ AGREGADO
         )
 
         "barbers" -> BarberAdminScreen(
@@ -63,8 +66,15 @@ fun AdminScreen(
             bookingViewModel = bookingViewModel,
             onBack = { currentScreen = "dashboard" }
         )
+
+        "purchases" -> AdminPurchaseScreen(
+            purchaseViewModel = purchaseViewModel,
+            onBack = { currentScreen = "dashboard" }
+        )
     }
 }
+
+
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -73,8 +83,10 @@ fun AdminDashboard(
     onGoToBarbers: () -> Unit,
     onGoToServices: () -> Unit,
     onGoToProducts: () -> Unit,
-    onGoToAppointments: () -> Unit
+    onGoToAppointments: () -> Unit,
+    onGoToPurchases: () -> Unit   // ⭐ AGREGADO
 ) {
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -106,7 +118,7 @@ fun AdminDashboard(
 
             AdminModuleCard(
                 title = "Servicios",
-                description = "Administrar cortes y servicios",
+                description = "Administrar servicios",
                 icon = Icons.Default.ContentCut,
                 color = Color(0xFFE91E63),
                 onClick = onGoToServices
@@ -114,7 +126,7 @@ fun AdminDashboard(
 
             AdminModuleCard(
                 title = "Productos",
-                description = "Administrar catálogo de productos",
+                description = "Administrar catálogo",
                 icon = Icons.Default.Inventory2,
                 color = Color(0xFF4CAF50),
                 onClick = onGoToProducts
@@ -127,11 +139,20 @@ fun AdminDashboard(
                 color = Color(0xFFFF9800),
                 onClick = onGoToAppointments
             )
+
+            AdminModuleCard(
+                title = "Compras",
+                description = "Historial de compras",
+                icon = Icons.Default.ReceiptLong,
+                color = Color(0xFF8E44AD),
+                onClick = onGoToPurchases
+            )
         }
     }
 }
 
-// Tarjetas
+
+
 @Composable
 fun AdminModuleCard(
     title: String,

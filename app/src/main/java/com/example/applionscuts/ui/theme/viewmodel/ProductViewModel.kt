@@ -2,11 +2,17 @@ package com.example.applionscuts.ui.theme.viewmodel
 
 import androidx.lifecycle.*
 import com.example.applionscuts.data.local.product.Product
+import com.example.applionscuts.data.local.purchase.PurchaseEntity
 import com.example.applionscuts.data.repository.ProductRepository
+import com.example.applionscuts.data.repository.PurchaseRepository
 import com.example.applionscuts.model.CartItem
+import com.example.applionscuts.viewmodel.PurchaseViewModel
 import kotlinx.coroutines.launch
 
-class ProductViewModel(val repo: ProductRepository) : ViewModel() {
+class ProductViewModel(
+    private val repo: ProductRepository,
+    private val purchaseRepository: PurchaseRepository   // ⭐ NUEVO
+) : ViewModel() {
 
     private val _products = MutableLiveData<List<Product>>()
     val products: LiveData<List<Product>> = _products
@@ -141,39 +147,35 @@ class ProductViewModel(val repo: ProductRepository) : ViewModel() {
         }
     }
 
-    // resta stock al agregar un producto al carrito
     fun addToCart(product: Product) {
         if (product.stock <= 0) {
             showToast("Producto sin stock disponible")
             return
         }
 
-        // Disminuye el stock del producto
         val updatedProduct = product.copy(stock = product.stock - 1)
 
-        // Actualiza la lista de productos con el nuevo stock
-        val updatedList = _products.value.orEmpty().map {
+        _products.value = _products.value.orEmpty().map {
             if (it.id == product.id) updatedProduct else it
         }
-        _products.value = updatedList
 
-        // Agrega o actualiza el producto en el carrito
         val current = _cartItems.value.orEmpty().toMutableList()
         val existing = current.find { it.product.id == product.id }
+
         if (existing != null) {
             current[current.indexOf(existing)] = existing.copy(quantity = existing.quantity + 1)
         } else {
             current.add(CartItem(updatedProduct, 1))
         }
-        _cartItems.value = current
 
+        _cartItems.value = current
         updateTotalPrice()
         showToast("Producto añadido al carrito")
     }
 
     private fun updateTotalPrice() {
-        val total = _cartItems.value.orEmpty().sumOf { it.product.price * it.quantity }
-        _totalPrice.value = total
+        _totalPrice.value = _cartItems.value.orEmpty()
+            .sumOf { it.product.price * it.quantity }
     }
 
     fun onShowCart() { _showCartDialog.value = true }
@@ -184,20 +186,61 @@ class ProductViewModel(val repo: ProductRepository) : ViewModel() {
     fun showToast(message: String) { _toastMessage.value = message }
     fun onToastShown() { _toastMessage.value = null }
 
+    // ============================================================
+    // 🔥 NUEVO: Registrar compra
+    // ============================================================
     fun confirmPayment(
+        userId: Int,                 // ⭐ AGREGADO
         nombre: String,
         dosApellidos: String,
         rut: String,
         numeroTarjeta: String,
         cvv: String,
         metodoEntrega: String,
-        direccion: String?
+        direccion: String?,
+        purchaseViewModel: PurchaseViewModel
     ) {
-        showToast("¡Pago procesado con éxito!")
+        val cartList = _cartItems.value ?: emptyList()
+
+        if (cartList.isEmpty()) {
+            showToast("El carrito está vacío")
+            return
+        }
+
+        val cartJson = cartList.joinToString(prefix = "[", postfix = "]") { item ->
+            """
+        {
+            "name": "${item.product.name}",
+            "quantity": ${item.quantity},
+            "price": ${item.product.price}
+        }
+        """.trimIndent()
+        }
+
+        val cardMasked = "**** **** **** " + numeroTarjeta.takeLast(4)
+        val cvvMasked = "***"
+
+        purchaseViewModel.savePurchase(
+            userId = userId,                        // ⭐ AGREGADO
+            userName = nombre,
+            userLastNames = dosApellidos,
+            userRut = rut,
+            cardNumber = cardMasked,
+            cvv = cvvMasked,
+            method = metodoEntrega,
+            fullAddress = direccion,
+            cartJson = cartJson,
+            totalAmount = totalPrice.value ?: 0.0
+        )
+
         _cartItems.value = emptyList()
         _totalPrice.value = 0.0
+
         onHidePayment()
+        showToast("¡Pago procesado con éxito!")
     }
+
+
 
     fun increaseQuantity(productId: Int) {
         val current = _cartItems.value.orEmpty().toMutableList()
@@ -215,11 +258,10 @@ class ProductViewModel(val repo: ProductRepository) : ViewModel() {
         if (item != null) {
             if (item.quantity > 1) {
                 current[current.indexOf(item)] = item.copy(quantity = item.quantity - 1)
-                _cartItems.value = current
             } else {
                 current.remove(item)
-                _cartItems.value = current
             }
+            _cartItems.value = current
             updateTotalPrice()
         }
     }

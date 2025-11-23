@@ -28,11 +28,12 @@ fun AppDrawer(
     onNavigateToProducts: () -> Unit,
     onNavigateToProfile: () -> Unit,
     onNavigateToAdmin: () -> Unit,
+    onNavigateToUserPurchases: () -> Unit,
     onLogout: () -> Unit
 ) {
     ModalDrawerSheet {
 
-        // HEADER
+        // === HEADER ===
         Column(
             modifier = Modifier
                 .fillMaxWidth()
@@ -47,13 +48,11 @@ fun AppDrawer(
                     .clip(RoundedCornerShape(16.dp))
             )
 
-            // Nombre de la App
             Text(
                 text = "LionsCuts",
                 style = MaterialTheme.typography.headlineSmall
             )
 
-            // Nombre dinámico del usuario
             Text(
                 text = userName,
                 style = MaterialTheme.typography.bodyMedium,
@@ -63,7 +62,7 @@ fun AppDrawer(
 
         Divider()
 
-        // OPCIONES GENERALES
+        // === OPCIONES GENERALES ===
 
         NavigationDrawerItem(
             icon = { Icon(Icons.Default.Home, "Inicio") },
@@ -104,7 +103,19 @@ fun AppDrawer(
             }
         )
 
-        // Administrador
+        // === MIS COMPRAS (SOLO CLIENTE) ===
+
+        NavigationDrawerItem(
+            icon = { Icon(Icons.Default.ShoppingCart, contentDescription = "Mis Compras") },
+            label = { Text("Mis Compras") },
+            selected = false,
+            onClick = {
+                onCloseDrawer()
+                if (!isAdmin) onNavigateToUserPurchases()
+            }
+        )
+
+        // === ADMIN ===
         if (isAdmin) {
             Divider(modifier = Modifier.padding(vertical = 8.dp))
 
@@ -121,7 +132,7 @@ fun AppDrawer(
 
         Spacer(modifier = Modifier.weight(1f))
 
-        // Cerrar sesión
+        // === CERRAR SESIÓN ===
         NavigationDrawerItem(
             icon = { Icon(Icons.AutoMirrored.Filled.ExitToApp, "Cerrar Sesión") },
             label = { Text("Cerrar Sesión") },
@@ -134,4 +145,3 @@ fun AppDrawer(
         )
     }
 }
-

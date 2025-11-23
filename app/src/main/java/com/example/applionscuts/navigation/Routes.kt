@@ -11,5 +11,9 @@ object Routes {
     const val ProfileEdit = "profile_edit"
     const val Booking = "booking"
     const val Admin = "admin"
+    const val Purchases = "purchases"
+
+    const val UserPurchases = "user_purchases"
+
 }
 

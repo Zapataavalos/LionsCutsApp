@@ -23,12 +23,17 @@ import androidx.compose.ui.window.Dialog
 import com.example.applionscuts.ui.theme.theme.LionsCutsBlack
 import com.example.applionscuts.ui.theme.theme.LionsCutsYellow
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
+import com.example.applionscuts.viewmodel.PurchaseViewModel
 import java.text.NumberFormat
 import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun PaymentDialog(viewModel: ProductViewModel) {
+fun PaymentDialog(
+    viewModel: ProductViewModel,
+    purchaseViewModel: PurchaseViewModel,
+    currentUserId: Int
+) {
     var nombre by remember { mutableStateOf("") }
     var dosApellidos by remember { mutableStateOf("") }
     var rut by remember { mutableStateOf("") }
@@ -59,6 +64,7 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
                 Row(
                     modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.SpaceBetween,
@@ -90,11 +96,7 @@ fun PaymentDialog(viewModel: ProductViewModel) {
 
                 OutlinedTextField(
                     value = nombre,
-                    onValueChange = { newValue ->
-                        if (newValue.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$"))) {
-                            nombre = newValue
-                        }
-                    },
+                    onValueChange = { if (it.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$"))) nombre = it },
                     label = { Text("Nombre", color = Color.White.copy(alpha = 0.7f)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
@@ -104,11 +106,7 @@ fun PaymentDialog(viewModel: ProductViewModel) {
 
                 OutlinedTextField(
                     value = dosApellidos,
-                    onValueChange = { newValue ->
-                        if (newValue.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$"))) {
-                            dosApellidos = newValue
-                        }
-                    },
+                    onValueChange = { if (it.matches(Regex("^[a-zA-ZáéíóúÁÉÍÓÚñÑ ]*$"))) dosApellidos = it },
                     label = { Text("Dos Apellidos", color = Color.White.copy(alpha = 0.7f)) },
                     modifier = Modifier.fillMaxWidth(),
                     colors = textFieldColors
@@ -120,11 +118,9 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                     value = rut,
                     onValueChange = { newValue ->
                         val filteredValue = newValue.filter {
-                            it.isDigit() || it.equals('k', ignoreCase = true) || it == '.' || it == '-'
+                            it.isDigit() || it.equals('k', true) || it == '.' || it == '-'
                         }
-                        if (filteredValue.length <= 12) {
-                            rut = filteredValue.uppercase()
-                        }
+                        if (filteredValue.length <= 12) rut = filteredValue.uppercase()
                     },
                     label = { Text("RUT", color = Color.White.copy(alpha = 0.7f)) },
                     placeholder = { Text("12.345.678-K", color = Color.White.copy(alpha = 0.5f)) },
@@ -143,19 +139,10 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                         value = numeroTarjeta,
                         onValueChange = { newValue ->
                             val filtered = newValue.filter { it.isDigit() }
-                            if (filtered.length <= 16) {
-                                numeroTarjeta = filtered
-                            }
+                            if (filtered.length <= 16) numeroTarjeta = filtered
                         },
-                        label = {
-                            Text(
-                                "Número de Tarjeta",
-                                color = Color.White.copy(alpha = 0.7f)
-                            )
-                        },
-                        placeholder = {
-                            Text("**** **** **** ****", color = Color.White.copy(alpha = 0.5f))
-                        },
+                        label = { Text("Número de Tarjeta", color = Color.White.copy(alpha = 0.7f)) },
+                        placeholder = { Text("**** **** **** ****", color = Color.White.copy(alpha = 0.5f)) },
                         keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.NumberPassword),
                         visualTransformation = PasswordVisualTransformation(),
                         modifier = Modifier.weight(0.7f),
@@ -165,9 +152,7 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                     OutlinedTextField(
                         value = cvv,
                         onValueChange = { newValue ->
-                            if (newValue.length <= 3 && newValue.all { it.isDigit() }) {
-                                cvv = newValue
-                            }
+                            if (newValue.length <= 3 && newValue.all { it.isDigit() }) cvv = newValue
                         },
                         label = { Text("CVV", color = Color.White.copy(alpha = 0.7f)) },
                         placeholder = { Text("123", color = Color.White.copy(alpha = 0.5f)) },
@@ -187,35 +172,17 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                     modifier = Modifier.align(Alignment.Start)
                 )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = metodoEntrega == "Retiro en Tienda",
-                        onClick = { metodoEntrega = "Retiro en Tienda" },
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = LionsCutsYellow,
-                            unselectedColor = Color.White
-                        )
-                    )
-                    Text("Retiro en Tienda", color = Color.White)
-                }
+                RadioButtonRow(
+                    label = "Retiro en Tienda",
+                    selected = metodoEntrega == "Retiro en Tienda",
+                    onClick = { metodoEntrega = "Retiro en Tienda" }
+                )
 
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    RadioButton(
-                        selected = metodoEntrega == "Envío a Domicilio",
-                        onClick = { metodoEntrega = "Envío a Domicilio" },
-                        colors = RadioButtonDefaults.colors(
-                            selectedColor = LionsCutsYellow,
-                            unselectedColor = Color.White
-                        )
-                    )
-                    Text("Envío a Domicilio", color = Color.White)
-                }
+                RadioButtonRow(
+                    label = "Envío a Domicilio",
+                    selected = metodoEntrega == "Envío a Domicilio",
+                    onClick = { metodoEntrega = "Envío a Domicilio" }
+                )
 
                 AnimatedVisibility(
                     visible = metodoEntrega == "Envío a Domicilio",
@@ -227,15 +194,8 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                         OutlinedTextField(
                             value = direccion,
                             onValueChange = { direccion = it },
-                            label = {
-                                Text(
-                                    "Dirección de Envío",
-                                    color = Color.White.copy(alpha = 0.7f)
-                                )
-                            },
-                            placeholder = {
-                                Text("Calle, Número, Comuna", color = Color.White.copy(alpha = 0.5f))
-                            },
+                            label = { Text("Dirección de Envío", color = Color.White.copy(alpha = 0.7f)) },
+                            placeholder = { Text("Calle, Número, Comuna", color = Color.White.copy(alpha = 0.5f)) },
                             modifier = Modifier.fillMaxWidth(),
                             colors = textFieldColors
                         )
@@ -247,13 +207,15 @@ fun PaymentDialog(viewModel: ProductViewModel) {
                 Button(
                     onClick = {
                         viewModel.confirmPayment(
-                            nombre,
-                            dosApellidos,
-                            rut,
-                            numeroTarjeta,
-                            cvv,
-                            metodoEntrega,
-                            if (metodoEntrega == "Envío a Domicilio") direccion else null
+                            userId = currentUserId,
+                            nombre = nombre,
+                            dosApellidos = dosApellidos,
+                            rut = rut,
+                            numeroTarjeta = numeroTarjeta,
+                            cvv = cvv,
+                            metodoEntrega = metodoEntrega,
+                            direccion = if (metodoEntrega == "Envío a Domicilio") direccion else null,
+                            purchaseViewModel = purchaseViewModel
                         )
                     },
                     modifier = Modifier
@@ -292,3 +254,23 @@ fun PaymentDialog(viewModel: ProductViewModel) {
         }
     }
 }
+
+@Composable
+fun RadioButtonRow(label: String, selected: Boolean, onClick: () -> Unit) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        RadioButton(
+            selected = selected,
+            onClick = onClick,
+            colors = RadioButtonDefaults.colors(
+                selectedColor = LionsCutsYellow,
+                unselectedColor = Color.White
+            )
+        )
+        Text(label, color = Color.White)
+    }
+}
+
+

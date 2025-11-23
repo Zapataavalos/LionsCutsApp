@@ -1,4 +1,3 @@
-// Archivo: com/example/applionscuts/MainActivity.kt
 package com.example.applionscuts
 
 import android.os.Bundle
@@ -19,38 +18,53 @@ import com.example.applionscuts.ui.screen.PaymentDialog
 import com.example.applionscuts.ui.theme.AppLionsCutsTheme
 import com.example.applionscuts.data.local.database.AppDatabase
 
+// FACTORIES
 import com.example.applionscuts.ui.theme.viewmodel.AuthViewModelFactory
-import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModelFactory
+import com.example.applionscuts.viewmodel.PurchaseViewModelFactory
 
-// ✔️ IMPORTANDO BarberViewModel
-import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
-
+// VIEWMODELS
 import com.example.applionscuts.viewmodel.*
+import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
+import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
+import com.example.applionscuts.data.repository.PurchaseRepository
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
             AppLionsCutsTheme {
+
                 val context = LocalContext.current
                 val database = AppDatabase.getDatabase(context)
 
+                // ---------------- AUTH ----------------
                 val authViewModel: AuthViewModel = viewModel(
                     factory = AuthViewModelFactory(database.userDao())
                 )
 
-                val productViewModel: ProductViewModel = viewModel(
-                    factory = ProductViewModelFactory(database.productDao())
+                // ---------------- PURCHASES (ROOM + REPO + FACTORY) ----------------
+                val purchaseRepository = PurchaseRepository(database.purchaseDao())
+
+                val purchaseViewModel: PurchaseViewModel = viewModel(
+                    factory = PurchaseViewModelFactory(purchaseRepository)
                 )
 
-                // ✔️ AHORA CREAMOS EL BARBERVIEWMODEL
-                val barberViewModel: BarberViewModel = viewModel()
+                // ---------------- PRODUCTS (con purchaseRepository) ----------------
+                val productViewModel: ProductViewModel = viewModel(
+                    factory = ProductViewModelFactory(
+                        database.productDao(),
+                        purchaseRepository     // ⭐ requerido ahora
+                    )
+                )
 
+                // ---------------- OTROS VIEWMODELS ----------------
+                val barberViewModel: BarberViewModel = viewModel()
                 val haircutViewModel: HaircutViewModel = viewModel()
                 val profileViewModel: ProfileViewModel = viewModel()
                 val bookingViewModel: BookingViewModel = viewModel()
 
+                // ---------------- TOASTS ----------------
                 val toastMessage by productViewModel.toastMessage.observeAsState()
                 LaunchedEffect(toastMessage) {
                     toastMessage?.let { message ->
@@ -59,8 +73,10 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
+                // ---------------- NAV CONTROLLER ----------------
                 val navController = rememberNavController()
 
+                // ---------------- UI ROOT ----------------
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -72,15 +88,26 @@ class MainActivity : ComponentActivity() {
                         haircutViewModel = haircutViewModel,
                         profileViewModel = profileViewModel,
                         bookingViewModel = bookingViewModel,
-                        barberViewModel = barberViewModel
+                        barberViewModel = barberViewModel,
+                        purchaseViewModel = purchaseViewModel   // ⭐ ahora sí
                     )
                 }
 
+                // ---------------- CART DIALOG ----------------
                 val showCart by productViewModel.showCartDialog.observeAsState(false)
-                val showPayment by productViewModel.showPaymentDialog.observeAsState(false)
+                if (showCart) {
+                    CartDialog(viewModel = productViewModel)
+                }
 
-                if (showCart) CartDialog(viewModel = productViewModel)
-                if (showPayment) PaymentDialog(viewModel = productViewModel)
+                // ---------------- PAYMENT DIALOG ----------------
+                val showPayment by productViewModel.showPaymentDialog.observeAsState(false)
+                if (showPayment) {
+                    PaymentDialog(
+                        viewModel = productViewModel,
+                        purchaseViewModel = purchaseViewModel,
+                        currentUserId = authViewModel.currentUser.value?.id ?: 0  // ⭐ IMPORTANTE
+                    )
+                }
             }
         }
     }

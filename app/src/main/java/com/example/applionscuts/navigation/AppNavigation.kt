@@ -10,6 +10,7 @@ import com.example.applionscuts.ui.theme.screen.ProductsScreen
 import com.example.applionscuts.ui.theme.viewmodel.BarberViewModel
 import com.example.applionscuts.ui.theme.viewmodel.ProductViewModel
 import com.example.applionscuts.viewmodel.*
+import com.example.applionscuts.viewmodel.PurchaseViewModel   // ⭐ IMPORTANTE
 
 @Composable
 fun AppNavigation(
@@ -19,7 +20,8 @@ fun AppNavigation(
     haircutViewModel: HaircutViewModel,
     profileViewModel: ProfileViewModel,
     bookingViewModel: BookingViewModel,
-    barberViewModel: BarberViewModel
+    barberViewModel: BarberViewModel,
+    purchaseViewModel: PurchaseViewModel       // ⭐ NUEVO VIEWMODEL
 ) {
     val isLoggedIn by authViewModel.isLoggedIn.observeAsState(false)
     val currentUser by authViewModel.currentUser.observeAsState()
@@ -64,12 +66,19 @@ fun AppNavigation(
         }
 
         // ---------------- HOME ----------------
+        // ---------------- HOME ----------------
         composable(Routes.Home) {
             HomeScreen(
                 onNavigateToHaircuts = { navController.navigate(Routes.Haircuts) },
                 onNavigateToProducts = { navController.navigate(Routes.Products) },
                 onNavigateToProfile = { navController.navigate(Routes.Profile) },
                 onNavigateToBooking = { navController.navigate(Routes.Booking) },
+
+                // ⭐ NECESARIO PARA EL DRAWER
+                onNavigateToUserPurchases = {
+                    navController.navigate(Routes.UserPurchases)
+                },
+
                 onNavigateToAdmin = { navController.navigate(Routes.Admin) },
                 onLogout = {
                     authViewModel.logout()
@@ -81,6 +90,7 @@ fun AppNavigation(
                 authViewModel = authViewModel
             )
         }
+
 
         // ---------------- PRODUCTS ----------------
         composable(Routes.Products) {
@@ -154,8 +164,27 @@ fun AppNavigation(
                 bookingViewModel = bookingViewModel,
                 barberViewModel = barberViewModel,
                 haircutViewModel = haircutViewModel,
+                purchaseViewModel = purchaseViewModel,  // ⭐ AGREGADO
                 onBack = { navController.popBackStack() }
             )
         }
+
+
+        // ---------------- PURCHASES (ADMIN) ----------------
+        composable(Routes.Purchases) {
+            AdminPurchaseScreen(
+                purchaseViewModel = purchaseViewModel,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
+        composable(Routes.UserPurchases) {
+            PurchaseHistoryScreen(
+                purchaseViewModel = purchaseViewModel,
+                currentUserId = currentUser?.id ?: 0,
+                onBack = { navController.popBackStack() }
+            )
+        }
+
     }
 }
