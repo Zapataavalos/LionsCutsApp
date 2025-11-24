@@ -29,7 +29,7 @@ abstract class AppDatabase : RoomDatabase() {
     abstract fun userDao(): UserDao
     abstract fun productDao(): ProductDao
     abstract fun appointmentDao(): AppointmentDao
-    abstract fun purchaseDao(): PurchaseDao      // ⭐ NUEVO DAO
+    abstract fun purchaseDao(): PurchaseDao
 
     companion object {
         @Volatile

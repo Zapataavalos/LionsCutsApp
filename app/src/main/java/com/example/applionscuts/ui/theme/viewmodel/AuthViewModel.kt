@@ -4,9 +4,10 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.example.applionscuts.data.client.usuarios.dto.UsuarioDto
 import com.example.applionscuts.domain.validation.Validators
 import com.example.applionscuts.data.repository.UserRepository
-import com.example.applionscuts.data.local.user.User
+import com.example.applionscuts.model.User
 import kotlinx.coroutines.launch
 
 class AuthViewModel(
@@ -24,8 +25,8 @@ class AuthViewModel(
     private val _errorMessage = MutableLiveData<String?>()
     val errorMessage: LiveData<String?> = _errorMessage
 
-    private val _currentUserName = MutableLiveData<String>()
-    val currentUserName: LiveData<String> = _currentUserName
+    private val _currentUserName = MutableLiveData<String?>()
+    val currentUserName: LiveData<String?> = _currentUserName
 
     private val _currentUser = MutableLiveData<User?>()
     val currentUser: LiveData<User?> = _currentUser
@@ -78,21 +79,29 @@ class AuthViewModel(
         // LOGIN NORMAL BD LOCAL
         viewModelScope.launch {
             val result = userRepository.login(email, password)
+            result.fold(
+                onSuccess = { usuarioDto ->
+                    val loggedUser = User(
+                        id = usuarioDto.id,
+                        name = usuarioDto.nombre,
+                        email = usuarioDto.email,
+                        phone = usuarioDto.telefono,
+                        password = usuarioDto.password,
+                        role = "cliente"
+                    )
+                    _currentUser.postValue(loggedUser)
+                    _currentUserName.postValue(loggedUser?.name ?: "Usuario")
+                    _isLoggedIn.postValue(true)
+                    _isAdmin.postValue(false )
+                    _errorMessage.postValue(null)
+                },
+                onFailure = { e ->
+                    _isLoggedIn.postValue(false)
+                    _isAdmin.postValue(false)
+                    _errorMessage.postValue("Credenciales incorrectas")
+                }
+            )
 
-            if (result.isSuccess) {
-                val user = result.getOrNull()
-
-                _currentUser.postValue(user)
-                _currentUserName.postValue(user?.name ?: "Usuario")
-                _isLoggedIn.postValue(true)
-                _isAdmin.postValue(user?.role == "admin")
-                _errorMessage.postValue(null)
-
-            } else {
-                _isLoggedIn.postValue(false)
-                _isAdmin.postValue(false)
-                _errorMessage.postValue("Credenciales incorrectas")
-            }
         }
     }
 
@@ -152,27 +161,48 @@ class AuthViewModel(
             else -> {
                 viewModelScope.launch {
                     val result = userRepository.register(name, email, phone, password)
+                     result.fold(
+                        onSuccess = { usuarioDto ->
+                            val newUser = User(
+                                id = usuarioDto.id,
+                                name = usuarioDto.nombre,
+                                email = usuarioDto.email,
+                                phone = usuarioDto.telefono,
+                                password = usuarioDto.password,
+                                role = "cliente"
+                            )
+                            _currentUser.postValue(newUser)
+                            _currentUserName.postValue(email)
+                            _registrationSuccess.postValue(true)
+                        },
+                        onFailure = { e ->
+                            _registrationSuccess.postValue(false)
+                            _errorMessage.postValue(
+                                result.exceptionOrNull()?.message ?: "Error al registrar usuario"
+                            )
+                        }
+                    )
 
-                    if (result.isSuccess) {
-                        val newUser = User(
-                            id = 0,
-                            name = name,
-                            email = email,
-                            phone = phone,
-                            password = password,
-                            role = "cliente"
-                        )
-
-                        _currentUser.postValue(newUser)
-                        _currentUserName.postValue(name)
-                        _registrationSuccess.postValue(true)
-
-                    } else {
-                        _registrationSuccess.postValue(false)
-                        _errorMessage.postValue(
-                            result.exceptionOrNull()?.message ?: "Error al registrar usuario"
-                        )
-                    }
+//                    if (result.isSuccess) {
+//                        val newUser = UsuarioDto(
+//                            id = 0,
+//                            name = name,
+//                            email = email,
+//                            phone = phone,
+//                            password = password,
+//                            role = "cliente"
+//                        )
+//
+//                        _currentUser.postValue(newUser)
+//                        _currentUserName.postValue(name)
+//                        _registrationSuccess.postValue(true)
+//
+//                    } else {
+//                        _registrationSuccess.postValue(false)
+//                        _errorMessage.postValue(
+//                            result.exceptionOrNull()?.message ?: "Error al registrar usuario"
+//                        )
+//                    }
                 }
             }
         }

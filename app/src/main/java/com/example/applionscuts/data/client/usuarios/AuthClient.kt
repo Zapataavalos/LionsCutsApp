@@ -11,7 +11,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 object AuthClient {
 
     // Línea 7: base URL del servicio JSONPlaceholder
-    private const val BASE_URL = "http://localhost:8081/api/auth/"
+    private const val BASE_URL = "http://172.20.10.2:8081/api/auth/"
 
     // Línea 9: creamos un interceptor de logging para depurar tráfico HTTP
     private val logging = HttpLoggingInterceptor().apply {

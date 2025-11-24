@@ -1,10 +1,11 @@
 package com.example.applionscuts.data.client.usuarios.dto
 
 data class UsuarioDto(
-    val id: Long?,
-    val username: String,
-    val password: String,
-    val email: String,
-    val telefono: String
+    val id: Int? = null,
+    val username: String? = null,
+    val nombre: String? = null,
+    val password: String? = null,
+    val email: String?= null,
+    val telefono: String? = null
 
 )

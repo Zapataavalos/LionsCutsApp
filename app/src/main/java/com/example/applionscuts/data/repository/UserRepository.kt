@@ -1,16 +1,30 @@
 package com.example.applionscuts.data.repository
 
-import com.example.applionscuts.data.local.user.User
+import android.util.Log
+import com.example.applionscuts.data.client.usuarios.AuthApi
+import com.example.applionscuts.data.client.usuarios.AuthClient
 import com.example.applionscuts.data.local.user.UserDao
+import com.example.applionscuts.data.client.usuarios.UsuariosApi
+import com.example.applionscuts.data.client.usuarios.UsuariosClient
+import com.example.applionscuts.data.client.usuarios.dto.UsuarioDto
+
 
 class UserRepository(
-    private val userDao: UserDao
+    private val userDao: UserDao,
+    private val usuariosApi: UsuariosApi ,
+    private val authApi: AuthApi
+
 ) {
 
     // LOGIN
-    suspend fun login(email: String, password: String): Result<User> {
+    suspend fun login(email: String, password: String): Result<UsuarioDto> {
         return try {
-            val user = userDao.loginUser(email, password)
+            val usuarioDto = UsuarioDto(
+                username = email,
+                password = password
+            )
+            val user = authApi.login(usuarioDto)
+
             if (user != null) Result.success(user)
             else Result.failure(Exception("Credenciales incorrectas"))
         } catch (e: Exception) {
@@ -19,21 +33,25 @@ class UserRepository(
     }
 
     // REGISTRO
-    suspend fun register(name: String, email: String, phone: String, password: String): Result<Unit> {
+    suspend fun register(name: String, email: String, phone: String, password: String): Result<UsuarioDto> {
         return try {
-            val existing = userDao.getUserByEmail(email)
-            if (existing != null)
-                return Result.failure(Exception("El usuario ya existe"))
-
-            userDao.insertUser(
-                User(
-                    name = name,
-                    email = email,
-                    phone = phone,
-                    password = password
-                )
+            try {
+                val usuarioDto = usuariosApi.getUsuarioByEmail(email)
+                if (usuarioDto!= null)
+                    return Result.failure(Exception("El usuario ya existe"))
+            }  catch (e: Exception) {
+                Log.i("User", "UserRepository - register - Email no encontrado")
+            }
+            val user = UsuarioDto(
+                id = null,
+                username = email,
+                nombre = name,
+                password = password,
+                email = email,
+                telefono = phone
             )
-            Result.success(Unit)
+            val newUser = authApi.register(user)
+            Result.success(newUser)
         } catch (e: Exception) {
             Result.failure(e)
         }
@@ -41,6 +59,6 @@ class UserRepository(
 
     // Verificar si un email existe (para recuperar contraseña)
     suspend fun emailExists(email: String): Boolean {
-        return userDao.getUserByEmail(email) != null
+        return usuariosApi.getUsuarioByEmail(email) != null
     }
 }

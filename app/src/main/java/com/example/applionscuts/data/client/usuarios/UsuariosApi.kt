@@ -19,7 +19,7 @@ interface UsuariosApi {
 
     // Endpoint para obtener un post por ID: GET /posts/{id}
     @GET("{id}")
-    suspend fun getUsuarioById(@Path("id") id: Long): UsuarioDto
+    suspend fun getUsuarioById(@Path("id") id: Int): UsuarioDto
 
 
     @POST("email/{email}")
@@ -28,11 +28,11 @@ interface UsuariosApi {
     // Endpoint para actualizar un post existente: PUT /posts/{id}
     @PUT("update/{id}")
     suspend fun update(
-        @Path("id") id: Long,
+        @Path("id") id: Int,
         @Body post: UsuarioDto
     ): UsuarioDto
 
     // Endpoint para eliminar un post: DELETE /posts/{id}
     @DELETE("delete/{id}")
-    suspend fun delete(@Path("id") id: Long): Response<Unit>
+    suspend fun delete(@Path("id") id: Int): Response<Unit>
 }
