@@ -6,12 +6,12 @@ import androidx.room.Room
 import androidx.room.RoomDatabase
 import com.example.applionscuts.data.local.product.Product
 import com.example.applionscuts.data.local.product.ProductDao
-import com.example.applionscuts.data.local.user.User
 import com.example.applionscuts.data.local.user.UserDao
 import com.example.applionscuts.data.local.appointment.AppointmentEntity
 import com.example.applionscuts.data.local.appointment.AppointmentDao
 import com.example.applionscuts.data.local.purchase.PurchaseEntity
 import com.example.applionscuts.data.local.purchase.PurchaseDao
+import com.example.applionscuts.model.User
 
 @Database(
     entities = [

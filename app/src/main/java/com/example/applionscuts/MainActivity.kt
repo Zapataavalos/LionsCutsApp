@@ -108,7 +108,7 @@ class MainActivity : ComponentActivity() {
                         profileViewModel = profileViewModel,
                         bookingViewModel = bookingViewModel,
                         barberViewModel = barberViewModel,
-                        purchaseViewModel = purchaseViewModel   // ⭐ ahora sí
+                        purchaseViewModel = purchaseViewModel
                     )
                 }
 
@@ -124,7 +124,7 @@ class MainActivity : ComponentActivity() {
                     PaymentDialog(
                         viewModel = productViewModel,
                         purchaseViewModel = purchaseViewModel,
-                        currentUserId = authViewModel.currentUser.value?.id ?: 0  // ⭐ IMPORTANTE
+                        currentUserId = authViewModel.currentUser.value?.id ?: 0
                     )
                 }
             }

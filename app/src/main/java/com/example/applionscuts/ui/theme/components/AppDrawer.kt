@@ -21,7 +21,7 @@ import com.example.applionscuts.R
 
 @Composable
 fun AppDrawer(
-    userName: String,
+    userName: String?,
     isAdmin: Boolean,
     onCloseDrawer: () -> Unit,
     onNavigateToHaircuts: () -> Unit,
@@ -54,7 +54,7 @@ fun AppDrawer(
             )
 
             Text(
-                text = userName,
+                text = userName.toString(),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )

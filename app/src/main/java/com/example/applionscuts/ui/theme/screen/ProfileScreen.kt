@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Camera
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Star
@@ -219,8 +218,8 @@ fun ProfileHeader(
         }
 
         Spacer(Modifier.height(8.dp))
-        Text(user.name, style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
-        Text(user.email, style = MaterialTheme.typography.bodyMedium)
+        Text(user.name.toString(), style = MaterialTheme.typography.titleLarge, fontWeight = FontWeight.Bold)
+        Text(user.email.toString(), style = MaterialTheme.typography.bodyMedium)
     }
 }
 

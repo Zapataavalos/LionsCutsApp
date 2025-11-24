@@ -37,7 +37,7 @@ class ProfileViewModel : ViewModel() {
     // -----------------------------------------------------
     // Recibir datos del AuthViewModel
     // -----------------------------------------------------
-    fun updateUserFromAuth(id: String, name: String, email: String, phone: String) {
+    fun updateUserFromAuth(id: String, name: String?, email: String?, phone: String?) {
         _userProfile.value = UserProfile(
             uid = id,
             name = name,
