@@ -10,7 +10,7 @@ import okhttp3.logging.HttpLoggingInterceptor
 // Línea 5: objeto singleton que expone Retrofit y la API
 object AuthClient {
 
-    private const val BASE_URL = "http://192.168.100.109:8081/"
+    private const val BASE_URL = "https://unflavorous-carline-solanaceous.ngrok-free.dev/"
 
     private val logging = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY

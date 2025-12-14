@@ -12,7 +12,7 @@ object UsuariosClient {
 
     // 🔹 IP LOCAL DEL BACKEND USUARIOS
     // ⚠️ Asegúrate que sea la IP de tu PC
-    private const val BASE_URL = "http://192.168.100.109:8081/"
+    private const val BASE_URL = "https://unflavorous-carline-solanaceous.ngrok-free.dev/"
 
     private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
