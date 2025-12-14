@@ -5,8 +5,10 @@ import android.util.Patterns
 class Validators {
 
     fun isValidEmail(email: String): Boolean {
-        return Patterns.EMAIL_ADDRESS.matcher(email).matches()
+        val emailRegex = "^[A-Za-z0-9+_.-]+@[A-Za-z0-9.-]+$"
+        return email.matches(emailRegex.toRegex())
     }
+
 
     fun isValidPassword(password: String): Boolean {
         return password.length >= 6 &&

@@ -16,20 +16,23 @@ public class UsuarioServiceImpl implements UsuarioService {
     @Override
     public Usuario register(Usuario usuario) {
 
-        // Validar que el username no exista
-        if (usuarioRepository.existsByUsername(usuario.getUsername())) {
-            throw new RuntimeException("El username ya existe");
-        }
-
-        // Validar que el email no exista
+        // 1️⃣ Validar email único
         if (usuarioRepository.existsByEmail(usuario.getEmail())) {
             throw new RuntimeException("El email ya existe");
         }
 
-        // Encriptar la contraseña antes de guardar
+        // 2️⃣ 🔥 CLAVE: usar email como username
+        usuario.setUsername(usuario.getEmail());
+
+        // 3️⃣ Encriptar contraseña
         usuario.setPassword(passwordEncoder.encode(usuario.getPassword()));
 
-        // Guardar en la base de datos
+        // 4️⃣ Rol por defecto
+        if (usuario.getRol() == null || usuario.getRol().isBlank()) {
+            usuario.setRol("cliente");
+        }
+
+        // 5️⃣ Guardar usuario
         return usuarioRepository.save(usuario);
     }
 }

@@ -14,10 +14,9 @@ import retrofit2.http.Path
 // Línea 4: interfaz con endpoints del servicio
 interface AuthApi {
 
-    @POST("register")
-    suspend fun register(@Body post: UsuarioDto): UsuarioDto
+    @POST("api/auth/register")
+    suspend fun register(@Body user: UsuarioDto): Response<UsuarioDto>
 
-    @POST("login")
-    suspend fun login(@Body post: UsuarioDto): UsuarioDto
-
+    @POST("api/auth/login")
+    suspend fun login(@Body user: UsuarioDto): Response<UsuarioDto>
 }

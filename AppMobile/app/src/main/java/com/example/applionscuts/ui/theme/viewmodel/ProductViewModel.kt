@@ -1,8 +1,11 @@
 package com.example.applionscuts.ui.theme.viewmodel
 
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.*
 import com.example.applionscuts.data.local.product.Product
 import com.example.applionscuts.data.local.purchase.PurchaseEntity
+import com.example.applionscuts.data.remote.dto.Producto
+import com.example.applionscuts.data.repository.CatalogoRepository
 import com.example.applionscuts.data.repository.ProductRepository
 import com.example.applionscuts.data.repository.PurchaseRepository
 import com.example.applionscuts.model.CartItem
@@ -34,6 +37,12 @@ class ProductViewModel(
 
     private val _selectedProduct = MutableLiveData<Product?>()
     val selectedProduct: LiveData<Product?> = _selectedProduct
+
+    private val repository = CatalogoRepository()
+
+    val productos = mutableStateOf<List<Producto>>(emptyList())
+
+
 
     init {
         loadProducts()
@@ -294,4 +303,11 @@ class ProductViewModel(
             loadProducts()
         }
     }
+
+    fun cargarProductos() {
+        viewModelScope.launch {
+            productos.value = repository.obtenerActivos()
+        }
+    }
+
 }

@@ -10,27 +10,25 @@ import okhttp3.logging.HttpLoggingInterceptor
 // Línea 5: objeto singleton que expone Retrofit y la API
 object UsuariosClient {
 
-    // Línea 7: base URL del servicio JSONPlaceholder
-    private const val BASE_URL = "http://172.20.10.2:8081/api/usuarios/"
+    // 🔹 IP LOCAL DEL BACKEND USUARIOS
+    // ⚠️ Asegúrate que sea la IP de tu PC
+    private const val BASE_URL = "http://192.168.100.109:8081/"
 
-    // Línea 9: creamos un interceptor de logging para depurar tráfico HTTP
-    private val logging = HttpLoggingInterceptor().apply {
-        // Línea 11: nivel BODY muestra todo (headers + cuerpo)
+    private val loggingInterceptor = HttpLoggingInterceptor().apply {
         level = HttpLoggingInterceptor.Level.BODY
     }
 
-    // Línea 14: construimos el cliente OkHttp con el interceptor
-    private val okHttp = OkHttpClient.Builder()
-        .addInterceptor(logging) // Línea 16: agregamos logging
+    private val okHttpClient = OkHttpClient.Builder()
+        .addInterceptor(loggingInterceptor)
         .build()
 
-    // Línea 19: construimos Retrofit indicando baseURL y convertidor JSON
     private val retrofit: Retrofit = Retrofit.Builder()
-        .baseUrl(BASE_URL) // Línea 21: host del servicio
-        .client(okHttp) // Línea 22: cliente con logging
-        .addConverterFactory(GsonConverterFactory.create()) // Línea 23: usa Gson para JSON
+        .baseUrl(BASE_URL)
+        .client(okHttpClient)
+        .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    // Línea 26: función para crear una implementación de la interfaz API
-    fun <T> create(service: Class<T>): T = retrofit.create(service)
+    fun <T> create(service: Class<T>): T {
+        return retrofit.create(service)
+    }
 }

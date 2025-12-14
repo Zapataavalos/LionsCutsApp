@@ -13,26 +13,21 @@ import retrofit2.http.Path
 // Línea 4: interfaz con endpoints del servicio
 interface UsuariosApi {
 
-    // Línea 6: GET /posts -> devuelve lista de PostDto
-    @GET("all")
+    @GET("api/usuarios/all")
     suspend fun getUsuarios(): List<UsuarioDto>
 
-    // Endpoint para obtener un post por ID: GET /posts/{id}
-    @GET("{id}")
+    @GET("api/usuarios/{id}")
     suspend fun getUsuarioById(@Path("id") id: Int): UsuarioDto
 
-
-    @POST("email/{email}")
+    @POST("api/usuarios/email/{email}")
     suspend fun getUsuarioByEmail(@Path("email") email: String): UsuarioDto
 
-    // Endpoint para actualizar un post existente: PUT /posts/{id}
-    @PUT("update/{id}")
+    @PUT("api/usuarios/update/{id}")
     suspend fun update(
         @Path("id") id: Int,
-        @Body post: UsuarioDto
+        @Body user: UsuarioDto
     ): UsuarioDto
 
-    // Endpoint para eliminar un post: DELETE /posts/{id}
-    @DELETE("delete/{id}")
+    @DELETE("api/usuarios/delete/{id}")
     suspend fun delete(@Path("id") id: Int): Response<Unit>
 }

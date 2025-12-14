@@ -139,7 +139,13 @@ class AuthViewModel(
 
     // REGISTRO
 
-    fun register(name: String, email: String, phone: String, password: String, confirmPassword: String) {
+    fun register(
+        name: String,
+        email: String,
+        phone: String,
+        password: String,
+        confirmPassword: String
+    ) {
         _errorMessage.value = null
 
         when {
@@ -150,7 +156,8 @@ class AuthViewModel(
                 _errorMessage.value = "El formato del email no es válido"
 
             !validators.isValidChileanPhone(phone) ->
-                _errorMessage.value = "El teléfono debe tener 9 dígitos y comenzar con 9 (912345678)"
+                _errorMessage.value =
+                    "El teléfono debe tener 9 dígitos y comenzar con 9 (912345678)"
 
             !validators.isValidPassword(password) ->
                 _errorMessage.value = validators.getPasswordErrorMessage(password)
@@ -160,53 +167,39 @@ class AuthViewModel(
 
             else -> {
                 viewModelScope.launch {
-                    val result = userRepository.register(name, email, phone, password)
-                     result.fold(
-                        onSuccess = { usuarioDto ->
-                            val newUser = User(
-                                id = usuarioDto.id,
-                                name = usuarioDto.nombre,
-                                email = usuarioDto.email,
-                                phone = usuarioDto.telefono,
-                                password = usuarioDto.password,
-                                role = "cliente"
-                            )
-                            _currentUser.postValue(newUser)
-                            _currentUserName.postValue(email)
-                            _registrationSuccess.postValue(true)
-                        },
-                        onFailure = { e ->
-                            _registrationSuccess.postValue(false)
-                            _errorMessage.postValue(
-                                result.exceptionOrNull()?.message ?: "Error al registrar usuario"
-                            )
-                        }
-                    )
+                    try {
+                        val result = userRepository.register(name, email, phone, password)
 
-//                    if (result.isSuccess) {
-//                        val newUser = UsuarioDto(
-//                            id = 0,
-//                            name = name,
-//                            email = email,
-//                            phone = phone,
-//                            password = password,
-//                            role = "cliente"
-//                        )
-//
-//                        _currentUser.postValue(newUser)
-//                        _currentUserName.postValue(name)
-//                        _registrationSuccess.postValue(true)
-//
-//                    } else {
-//                        _registrationSuccess.postValue(false)
-//                        _errorMessage.postValue(
-//                            result.exceptionOrNull()?.message ?: "Error al registrar usuario"
-//                        )
-//                    }
+                        result.fold(
+                            onSuccess = { usuarioDto ->
+                                val newUser = User(
+                                    id = usuarioDto.id,
+                                    name = usuarioDto.nombre,
+                                    email = usuarioDto.email,
+                                    phone = usuarioDto.telefono,
+                                    password = usuarioDto.password,
+                                    role = "cliente"
+                                )
+                                _currentUser.postValue(newUser)
+                                _currentUserName.postValue(newUser.name)
+                                _registrationSuccess.postValue(true)
+                            },
+                            onFailure = {
+                                // 🔥 NO mostrar 401 ni errores técnicos
+                                _registrationSuccess.postValue(false)
+                                _errorMessage.postValue("No se pudo completar el registro")
+                            }
+                        )
+                    } catch (e: Exception) {
+                        // 🔥 Nunca dejar que un error de red rompa el flujo
+                        _registrationSuccess.postValue(false)
+                        _errorMessage.postValue(null)
+                    }
                 }
             }
         }
     }
+
 
 
 

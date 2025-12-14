@@ -2,63 +2,99 @@ package com.example.applionscuts.data.repository
 
 import android.util.Log
 import com.example.applionscuts.data.client.usuarios.AuthApi
-import com.example.applionscuts.data.client.usuarios.AuthClient
-import com.example.applionscuts.data.local.user.UserDao
 import com.example.applionscuts.data.client.usuarios.UsuariosApi
-import com.example.applionscuts.data.client.usuarios.UsuariosClient
 import com.example.applionscuts.data.client.usuarios.dto.UsuarioDto
-
+import com.example.applionscuts.data.local.user.UserDao
 
 class UserRepository(
     private val userDao: UserDao,
-    private val usuariosApi: UsuariosApi ,
+    private val usuariosApi: UsuariosApi,
     private val authApi: AuthApi
-
 ) {
 
+    // -----------------------------
     // LOGIN
+    // -----------------------------
     suspend fun login(email: String, password: String): Result<UsuarioDto> {
         return try {
-            val usuarioDto = UsuarioDto(
-                username = email,
+            val request = UsuarioDto(
+                email = email,
                 password = password
             )
-            val user = authApi.login(usuarioDto)
 
-            if (user != null) Result.success(user)
-            else Result.failure(Exception("Credenciales incorrectas"))
-        } catch (e: Exception) {
-            Result.failure(e)
-        }
-    }
+            val response = authApi.login(request)
 
-    // REGISTRO
-    suspend fun register(name: String, email: String, phone: String, password: String): Result<UsuarioDto> {
-        return try {
-            try {
-                val usuarioDto = usuariosApi.getUsuarioByEmail(email)
-                if (usuarioDto!= null)
-                    return Result.failure(Exception("El usuario ya existe"))
-            }  catch (e: Exception) {
-                Log.i("User", "UserRepository - register - Email no encontrado")
+            if (response.isSuccessful) {
+                val user = response.body()
+                if (user != null) {
+                    Result.success(user)
+                } else {
+                    Result.failure(Exception("Respuesta vacía del servidor"))
+                }
+            } else {
+                Result.failure(Exception("Credenciales incorrectas"))
             }
-            val user = UsuarioDto(
-                id = null,
-                username = email,
-                nombre = name,
-                password = password,
-                email = email,
-                telefono = phone
-            )
-            val newUser = authApi.register(user)
-            Result.success(newUser)
+
         } catch (e: Exception) {
-            Result.failure(e)
+            Result.failure(Exception("Error de conexión"))
         }
     }
 
-    // Verificar si un email existe (para recuperar contraseña)
+    // -----------------------------
+    // REGISTRO
+    // -----------------------------
+    suspend fun register(
+        name: String,
+        email: String,
+        phone: String,
+        password: String
+    ): Result<UsuarioDto> {
+
+        return try {
+            // Verificar si email existe
+            try {
+                val existing = usuariosApi.getUsuarioByEmail(email)
+                if (existing != null) {
+                    return Result.failure(Exception("El usuario ya existe"))
+                }
+            } catch (e: Exception) {
+                Log.i("UserRepository", "Email no registrado, se puede crear")
+            }
+
+            val request = UsuarioDto(
+                nombre = name,
+                email = email,
+                password = password,
+                telefono = phone,
+                username = email
+            )
+
+            val response = authApi.register(request)
+
+            if (response.isSuccessful) {
+                val newUser = response.body()
+                if (newUser != null) {
+                    Result.success(newUser)
+                } else {
+                    Result.failure(Exception("No se pudo crear el usuario"))
+                }
+            } else {
+                Result.failure(Exception("Error al registrar usuario"))
+            }
+
+        } catch (e: Exception) {
+            Result.failure(Exception("Error de conexión"))
+        }
+    }
+
+    // -----------------------------
+    // RECUPERAR CONTRASEÑA
+    // -----------------------------
     suspend fun emailExists(email: String): Boolean {
-        return usuariosApi.getUsuarioByEmail(email) != null
+        return try {
+            usuariosApi.getUsuarioByEmail(email) != null
+        } catch (e: Exception) {
+            false
+        }
     }
 }
