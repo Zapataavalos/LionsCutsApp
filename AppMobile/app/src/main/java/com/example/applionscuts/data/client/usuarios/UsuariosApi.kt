@@ -1,6 +1,7 @@
 package com.example.applionscuts.data.client.usuarios
 // Importamos las anotaciones necesarias para definir endpoints HTTP.
 import com.example.applionscuts.data.client.usuarios.dto.UsuarioDto
+import com.example.applionscuts.data.client.usuarios.dto.UsuarioUpdateDto
 import retrofit2.Response
 import retrofit2.http.Body
 import retrofit2.http.DELETE
@@ -25,8 +26,10 @@ interface UsuariosApi {
     @PUT("api/usuarios/update/{id}")
     suspend fun update(
         @Path("id") id: Int,
-        @Body user: UsuarioDto
+        @Body user: UsuarioUpdateDto
     ): UsuarioDto
+
+
 
     @DELETE("api/usuarios/delete/{id}")
     suspend fun delete(@Path("id") id: Int): Response<Unit>
