@@ -1,9 +1,9 @@
 package com.example.Carrito.y.Pedido.Service;
 
-import com.example.Carrito.y.Pedido.Client.ProductoClient; // <--- NUEVO: CLIENTE PRODUCTOS
-import com.example.Carrito.y.Pedido.DTO.ProductoDTO;       // <--- NUEVO: DTO PRODUCTOS
-import com.example.Carrito.y.Pedido.Client.UsuarioClient; 
-import com.example.Carrito.y.Pedido.DTO.UsuarioDTO;       
+import com.example.Carrito.y.Pedido.Client.ProductoClient;
+import com.example.Carrito.y.Pedido.Client.UsuarioClient;
+import com.example.Carrito.y.Pedido.DTO.ProductoDTO;
+import com.example.Carrito.y.Pedido.DTO.UsuarioDTO;
 import com.example.Carrito.y.Pedido.Model.*;
 import com.example.Carrito.y.Pedido.Repository.CarritoRepository;
 import com.example.Carrito.y.Pedido.Repository.ItemCarritoRepository;
@@ -31,172 +31,201 @@ public class CarritoServiceImpl implements CarritoService {
     @Autowired
     private PedidoRepository pedidoRepository;
 
-    // Inyectamos el cliente para comunicarnos con Usuarios (Puerto 8081)
     @Autowired
-    private UsuarioClient usuarioClient; 
+    private UsuarioClient usuarioClient;
 
-    // --- NUEVO: Inyectamos el cliente para comunicarnos con Productos (Puerto 8083) ---
     @Autowired
     private ProductoClient productoClient;
-    // ----------------------------------------------------------------------------------
 
-    // --- Lógica Principal del Carrito ---
+    // ======================================================
+    // CARRITO
+    // ======================================================
 
     @Override
     public Carrito obtenerOCrearCarritoActivo(Long clienteId) {
         return carritoRepository.findByClienteIdAndEstado(clienteId, EstadoCarrito.ACTIVO)
                 .orElseGet(() -> {
-                    // VALIDACIÓN USUARIO: Verificamos que el cliente exista
-                    usuarioClient.obtenerUsuarioPorId(clienteId)
-                        .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
-                            "No se puede crear el carrito. El cliente con ID " + clienteId + " no existe."));
 
-                    Carrito nuevoCarrito = Carrito.builder()
+                    // Validar que el usuario exista
+                    usuarioClient.obtenerUsuarioPorId(clienteId)
+                            .orElseThrow(() -> new ResponseStatusException(
+                                    HttpStatus.NOT_FOUND,
+                                    "No existe el cliente con ID " + clienteId
+                            ));
+
+                    Carrito nuevo = Carrito.builder()
                             .clienteId(clienteId)
                             .estado(EstadoCarrito.ACTIVO)
                             .fechaCreacion(LocalDateTime.now())
                             .build();
-                    return carritoRepository.save(nuevoCarrito);
+
+                    return carritoRepository.save(nuevo);
                 });
     }
 
     @Override
     @Transactional
-    public ItemCarrito agregarOActualizarItem(Long clienteId, Long productoId, 
-                                             int cantidad, Double precioSimulado, 
-                                             Integer duracionSimulada) {
-        
+    public ItemCarrito agregarOActualizarItem(
+            Long clienteId,
+            Long productoId,
+            int cantidad,
+            Double precioSimulado,
+            Integer duracionSimulada
+    ) {
+
         if (cantidad <= 0) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "La cantidad debe ser mayor a cero.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "La cantidad debe ser mayor a cero"
+            );
         }
 
-        // --- NUEVO: VALIDACIÓN DE PRODUCTO Y PRECIO REAL ---
-        // Consultamos al Microservicio de Catálogo para obtener los datos reales
-        ProductoDTO productoReal = productoClient.obtenerProductoPorId(productoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, 
-                        "El producto con ID " + productoId + " no existe en el catálogo."));
+        // Obtener producto REAL desde Catálogo
+        ProductoDTO producto = productoClient.obtenerProductoPorId(productoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Producto no existe en el catálogo"
+                ));
 
-        // Verificamos si el producto está activo para la venta
-        if (!productoReal.isActivo()) {
-             throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El producto '" + productoReal.getNombre() + "' no está disponible actualmente.");
+        if (!producto.isActivo()) {
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El producto no está disponible"
+            );
         }
-        // ---------------------------------------------------
 
         Carrito carrito = obtenerOCrearCarritoActivo(clienteId);
 
-        Optional<ItemCarrito> itemExistente = itemCarritoRepository.findByCarritoIdAndProductoId(carrito.getId(), productoId);
+        Optional<ItemCarrito> existente =
+                itemCarritoRepository.findByCarritoIdAndProductoId(carrito.getId(), productoId);
 
         ItemCarrito item;
 
-        if (itemExistente.isPresent()) {
-            item = itemExistente.get();
-            item.setCantidad(cantidad); 
-            // Actualizamos el precio al valor real actual del catálogo
-            item.setPrecioUnitario(productoReal.getPrecio());
+        if (existente.isPresent()) {
+            item = existente.get();
+            item.setCantidad(cantidad);
+            item.setPrecioUnitario(producto.getPrecio());
+            item.setDuracionUnitarioMinutos(producto.getDuracionMinutos());
         } else {
             item = ItemCarrito.builder()
                     .carrito(carrito)
                     .productoId(productoId)
                     .cantidad(cantidad)
-                    // ¡SEGURIDAD!: Usamos el precio real del microservicio, NO el que envía Postman
-                    .precioUnitario(productoReal.getPrecio()) 
-                    // Usamos la duración real del microservicio
-                    .duracionUnitarioMinutos(productoReal.getDuracionMinutos())
+                    .precioUnitario(producto.getPrecio())
+                    .duracionUnitarioMinutos(producto.getDuracionMinutos())
                     .build();
-            
-            if (carrito.getItems() == null) carrito.setItems(new java.util.ArrayList<>());
+
+            if (carrito.getItems() == null) {
+                carrito.setItems(new java.util.ArrayList<>());
+            }
+
             carrito.getItems().add(item);
         }
 
-        carritoRepository.save(carrito); 
-
+        carritoRepository.save(carrito);
         return itemCarritoRepository.save(item);
     }
 
     @Override
     @Transactional
     public void eliminarItem(Long clienteId, Long productoId) {
+
         Carrito carrito = obtenerOCrearCarritoActivo(clienteId);
 
-        ItemCarrito item = itemCarritoRepository.findByCarritoIdAndProductoId(carrito.getId(), productoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Ítem no encontrado en el carrito."));
+        ItemCarrito item = itemCarritoRepository
+                .findByCarritoIdAndProductoId(carrito.getId(), productoId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Ítem no encontrado en el carrito"
+                ));
 
         carrito.getItems().remove(item);
         itemCarritoRepository.delete(item);
-
-        carritoRepository.save(carrito); 
+        carritoRepository.save(carrito);
     }
 
     @Override
     public Carrito obtenerCarritoPorId(Long carritoId) {
-        return carritoRepository.findById(carritoId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Carrito no encontrado."));
+        return carritoRepository
+                .findByIdAndEstado(carritoId, EstadoCarrito.ACTIVO)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "Carrito activo no encontrado"
+                ));
     }
 
-    // --- Lógica de Pedido (Conversión) ---
+    // ======================================================
+    // PEDIDO
+    // ======================================================
 
     @Override
     @Transactional
     public Pedido finalizarCompra(Long clienteId) {
-        
-        // VALIDACIÓN USUARIO: Verificamos cliente antes de procesar
+
         UsuarioDTO usuario = usuarioClient.obtenerUsuarioPorId(clienteId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "El cliente no existe."));
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND,
+                        "El cliente no existe"
+                ));
 
         Carrito carrito = obtenerOCrearCarritoActivo(clienteId);
-        
+
         if (carrito.getItems() == null || carrito.getItems().isEmpty()) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, "El carrito está vacío y no puede finalizar la compra.");
+            throw new ResponseStatusException(
+                    HttpStatus.BAD_REQUEST,
+                    "El carrito está vacío"
+            );
         }
 
         Double total = calcularTotal(carrito.getId());
-        
-        List<ItemPedido> itemsPedido = carrito.getItems().stream()
-            .map(itemCarrito -> ItemPedido.builder()
-                .productoId(itemCarrito.getProductoId())
-                .cantidad(itemCarrito.getCantidad())
-                .precioPagado(itemCarrito.getPrecioUnitario()) 
-                .duracionRegistradaMinutos(itemCarrito.getDuracionUnitarioMinutos())
-                .build()
-            ).collect(Collectors.toList());
 
-        Pedido nuevoPedido = Pedido.builder()
-                .clienteId(clienteId) 
+        List<ItemPedido> itemsPedido = carrito.getItems().stream()
+                .map(i -> ItemPedido.builder()
+                        .productoId(i.getProductoId())
+                        .cantidad(i.getCantidad())
+                        .precioPagado(i.getPrecioUnitario())
+                        .duracionRegistradaMinutos(i.getDuracionUnitarioMinutos())
+                        .build()
+                ).collect(Collectors.toList());
+
+        Pedido pedido = Pedido.builder()
+                .clienteId(clienteId)
                 .total(total)
-                .carritoOrigenId(carrito.getId())
                 .estado(EstadoPedido.PENDIENTE_PAGO)
+                .carritoOrigenId(carrito.getId())
                 .fechaCreacion(LocalDateTime.now())
                 .items(itemsPedido)
                 .build();
-        
-        itemsPedido.forEach(item -> item.setPedido(nuevoPedido));
 
-        Pedido pedidoGuardado = pedidoRepository.save(nuevoPedido);
+        itemsPedido.forEach(i -> i.setPedido(pedido));
+
+        Pedido guardado = pedidoRepository.save(pedido);
 
         carrito.setEstado(EstadoCarrito.COMPLETADO);
         carritoRepository.save(carrito);
 
-        return pedidoGuardado;
+        return guardado;
     }
 
     @Override
     public Double calcularTotal(Long carritoId) {
         Carrito carrito = obtenerCarritoPorId(carritoId);
+
         if (carrito.getItems() == null) return 0.0;
 
         return carrito.getItems().stream()
-                .mapToDouble(item -> item.getPrecioUnitario() * item.getCantidad())
+                .mapToDouble(i -> i.getPrecioUnitario() * i.getCantidad())
                 .sum();
     }
 
     @Override
     public Integer calcularDuracionTotalMinutos(Long carritoId) {
         Carrito carrito = obtenerCarritoPorId(carritoId);
+
         if (carrito.getItems() == null) return 0;
 
         return carrito.getItems().stream()
-                .filter(item -> item.getDuracionUnitarioMinutos() != null)
-                .mapToInt(item -> item.getDuracionUnitarioMinutos() * item.getCantidad())
+                .mapToInt(i -> i.getDuracionUnitarioMinutos() * i.getCantidad())
                 .sum();
     }
 }
